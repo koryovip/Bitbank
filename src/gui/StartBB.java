@@ -1,19 +1,14 @@
 package gui;
 
-import java.awt.Component;
-import java.awt.Container;
 import java.awt.EventQueue;
 import java.awt.Font;
-import java.awt.Window;
-import java.util.Locale;
 
-import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JToolBar;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
-import javax.swing.plaf.FontUIResource;
+
+import utils.SwingUtil;
 
 public class StartBB {
 
@@ -38,35 +33,8 @@ public class StartBB {
         frame.pack();
         frame.setLocationRelativeTo(null);
         Font font = new Font("MS Gothic", Font.PLAIN, 24);
-        updateFont(BitBankMainFrame.me(), font);
+        SwingUtil.me().updateFont(BitBankMainFrame.me(), font);
         frame.setVisible(true);
     }
 
-    private static final void updateFont(JComponent p, Font font) {
-        FontUIResource fontUIResource = new FontUIResource(font);
-        for (Object o : UIManager.getLookAndFeelDefaults().keySet()) {
-            if (o.toString().toLowerCase(Locale.ENGLISH).endsWith("font")) {
-                UIManager.put(o, fontUIResource);
-            }
-        }
-        recursiveUpdateUI(p); //SwingUtilities.updateComponentTreeUI(this);
-        Container c = p.getTopLevelAncestor();
-        if (c instanceof Window) {
-            ((Window) c).pack();
-        }
-    }
-
-    private static void recursiveUpdateUI(JComponent p) {
-        for (Component c : p.getComponents()) {
-            if (c instanceof JToolBar) {
-                continue;
-            } else if (c instanceof JComponent) {
-                JComponent jc = (JComponent) c;
-                jc.updateUI();
-                if (jc.getComponentCount() > 0) {
-                    recursiveUpdateUI(jc);
-                }
-            }
-        }
-    }
 }

@@ -4,27 +4,41 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
 import cc.bitbank.entity.Order;
 import utils.DateUtil;
 
 public class RowDataModel extends DefaultTableModel {
     private static final long serialVersionUID = -813484403607557100L;
+    public static final int COL_INDEX_NO = 0;
     public static final int COL_INDEX_ORDER_ID = 1;
     public static final int COL_INDEX_AMOUNT = 3;
     public static final int COL_INDEX_STATUS = 5;
     public static final int COL_INDEX_LASTUPD = 6;
 
     private static final ColumnContext[] COLUMN_ARRAY = { //
-            new ColumnContext("No.", Integer.class, false), //
-            new ColumnContext("OrderId", Long.class, false), //
-            new ColumnContext("Info", String.class, false), //
-            new ColumnContext("Amount", BigDecimal.class, false), //
-            new ColumnContext("Price", BigDecimal.class, false), //
-            new ColumnContext("Status", String.class, false), //
-            new ColumnContext("LastUpd", String.class, false), //
+            new ColumnContext("No.", Integer.class, false, 10), //
+            new ColumnContext("OrderId", Long.class, false, 50), //
+            new ColumnContext("Info", String.class, false, 100), //
+            new ColumnContext("Amount", BigDecimal.class, false, 100), //
+            new ColumnContext("Price", BigDecimal.class, false, 100), //
+            new ColumnContext("Status", String.class, false, 150), //
+            new ColumnContext("LastUpd", String.class, false, 120), //
     };
     private int number = 1;
+
+    final public void initColumnSize(TableColumnModel tableColumnModel) {
+        int index = 0;
+        for (ColumnContext context : COLUMN_ARRAY) {
+            TableColumn tableColumn = tableColumnModel.getColumn(index++);
+            tableColumn.setMinWidth(context.columnWidth);
+            if (index == COL_INDEX_NO) {
+                tableColumn.setMaxWidth(context.columnWidth);
+            }
+        }
+    }
 
     synchronized public boolean addOrUpdRowData(Order order) {
         boolean updateBalance = false;
@@ -120,11 +134,13 @@ public class RowDataModel extends DefaultTableModel {
         public final String columnName;
         public final Class<?> columnClass;
         public final boolean isEditable;
+        public final int columnWidth;
 
-        protected ColumnContext(String columnName, Class<?> columnClass, boolean isEditable) {
+        protected ColumnContext(String columnName, Class<?> columnClass, boolean isEditable, int columnWidth) {
             this.columnName = columnName;
             this.columnClass = columnClass;
             this.isEditable = isEditable;
+            this.columnWidth = columnWidth;
         }
     }
 }

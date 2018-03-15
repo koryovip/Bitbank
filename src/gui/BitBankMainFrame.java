@@ -25,7 +25,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.table.TableColumn;
 
 import cc.Config;
 import cc.bitbank.Bitbankcc;
@@ -64,6 +63,8 @@ public class BitBankMainFrame extends JPanel {
 
     private final RowDataModel model = new RowDataModel();
     private final JTable table = new JTable(model) {
+        private static final long serialVersionUID = 8304794967568437905L;
+
         public int getRowHeight(int row) {
             return 22;
         }
@@ -94,7 +95,7 @@ public class BitBankMainFrame extends JPanel {
 
         setLayout(null);
         setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-        setPreferredSize(new Dimension(640, 480));
+        setPreferredSize(new Dimension(800, 480));
 
         init();
 
@@ -170,16 +171,14 @@ public class BitBankMainFrame extends JPanel {
             table.setDefaultRenderer(BigDecimal.class, renderer);
 
             //table.setShowGrid(false);
-            TableColumn col = table.getColumnModel().getColumn(0);
-            col.setMinWidth(60);
-            col.setMaxWidth(60);
-            col.setResizable(false);
+            model.initColumnSize(table.getColumnModel());
 
+            table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
             table.setAutoCreateRowSorter(true);
             table.setFillsViewportHeight(true);
             // table.setComponentPopupMenu(new TablePopupMenu());
             final JScrollPane jScrollPane = new JScrollPane(table);
-            jScrollPane.setBounds(10, 130, 700, 300);
+            jScrollPane.setBounds(10, 130, 900, 300);
             add(jScrollPane);
         }
         {
