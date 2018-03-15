@@ -1,4 +1,4 @@
-package gui;
+package gui.form;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -37,6 +37,7 @@ import cc.bitbank.entity.enums.CurrencyPair;
 import cc.bitbank.entity.enums.OrderSide;
 import cc.bitbank.entity.enums.OrderType;
 import cc.bitbank.exception.BitbankException;
+import gui.popup.TablePopupMenu;
 import gui.renderer.StripeTableRenderer;
 import gui.tablemodel.RowDataModel;
 import utils.DateUtil;
@@ -64,10 +65,9 @@ public class BitBankMainFrame extends JPanel {
     private final RowDataModel model = new RowDataModel();
     private final JTable table = new JTable(model) {
         private static final long serialVersionUID = 8304794967568437905L;
-
-        public int getRowHeight(int row) {
-            return 22;
-        }
+        /*public int getRowHeight(int row) {
+        return 22;
+        }*/
     };
 
     public static BitBankMainFrame me() {
@@ -159,11 +159,13 @@ public class BitBankMainFrame extends JPanel {
         //        });
         //        add(btn);
 
-        Font font14 = new Font("MS Gothic", Font.PLAIN, 14);
+        Font font14 = new Font("MS Gothic", Font.PLAIN, 16);
         {
             // JTable table = new JTable(model);
             table.setFont(font14);
             table.getTableHeader().setFont(font14);
+            table.setRowHeight(24);
+
             StripeTableRenderer renderer = new StripeTableRenderer();
             table.setDefaultRenderer(Object.class, renderer);
             table.setDefaultRenderer(Integer.class, renderer);
@@ -176,7 +178,7 @@ public class BitBankMainFrame extends JPanel {
             table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
             table.setAutoCreateRowSorter(true);
             table.setFillsViewportHeight(true);
-            // table.setComponentPopupMenu(new TablePopupMenu());
+            table.setComponentPopupMenu(new TablePopupMenu());
             final JScrollPane jScrollPane = new JScrollPane(table);
             jScrollPane.setBounds(10, 130, 900, 300);
             add(jScrollPane);
@@ -218,6 +220,7 @@ public class BitBankMainFrame extends JPanel {
             btn.setFont(font14);
             btn.setBounds(160, 440, 100, 20);
             btn.addActionListener(new ActionListener() {
+
                 @Override
                 public void actionPerformed(ActionEvent event) {
                     int selectedRowIndex = table.getSelectedRow();
@@ -285,6 +288,7 @@ public class BitBankMainFrame extends JPanel {
             });
             add(btn);
         }
+
     }
 
     private void update(final long delay) {
@@ -360,6 +364,7 @@ public class BitBankMainFrame extends JPanel {
             } , 0, delay, TimeUnit.SECONDS);
         }
         {
+
             // long[] orderIds = new long[] { 21631360, 21631793, 21633650 };
             ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
             service.scheduleWithFixedDelay(() -> {
@@ -377,6 +382,7 @@ public class BitBankMainFrame extends JPanel {
                     e.printStackTrace();
                 }
             } , 0, delay, TimeUnit.SECONDS);
+
         }
     }
 
