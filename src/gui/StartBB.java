@@ -8,6 +8,7 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
 
+import gui.form.BitBankMainFrame;
 import utils.SwingUtil;
 
 public class StartBB {
