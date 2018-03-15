@@ -1,12 +1,12 @@
 package gui.tablemodel;
 
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.swing.table.DefaultTableModel;
 
 import cc.bitbank.entity.Order;
+import utils.DateUtil;
 
 public class RowDataModel extends DefaultTableModel {
     private static final long serialVersionUID = -813484403607557100L;
@@ -14,7 +14,7 @@ public class RowDataModel extends DefaultTableModel {
     public static final int COL_INDEX_AMOUNT = 3;
     public static final int COL_INDEX_STATUS = 5;
     public static final int COL_INDEX_LASTUPD = 6;
-    SimpleDateFormat sdf = new SimpleDateFormat("MM/dd HH:mm:ss");
+
     private static final ColumnContext[] COLUMN_ARRAY = { //
             new ColumnContext("No.", Integer.class, false), //
             new ColumnContext("OrderId", Long.class, false), //
@@ -40,7 +40,7 @@ public class RowDataModel extends DefaultTableModel {
                     updateBalance = true;
                 }
                 super.setValueAt(order.status, index, COL_INDEX_STATUS);
-                super.setValueAt(sdf.format(new Date()), index, COL_INDEX_LASTUPD);
+                super.setValueAt(DateUtil.me().format1(new Date()), index, COL_INDEX_LASTUPD);
                 exists = true;
                 break;
             }
@@ -51,7 +51,7 @@ public class RowDataModel extends DefaultTableModel {
                     this.getAmount(order), //
                     this.getPrice(order), //
                     order.status, //
-                    sdf.format(new Date()) //
+                    DateUtil.me().format1(new Date()) //
             };
             super.addRow(obj);
             updateBalance = true;

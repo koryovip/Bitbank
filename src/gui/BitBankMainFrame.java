@@ -7,7 +7,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +40,7 @@ import cc.bitbank.entity.enums.OrderType;
 import cc.bitbank.exception.BitbankException;
 import gui.renderer.StripeTableRenderer;
 import gui.tablemodel.RowDataModel;
+import utils.DateUtil;
 
 public class BitBankMainFrame extends JPanel {
     private static final long serialVersionUID = -8858161812949493525L;
@@ -63,13 +63,16 @@ public class BitBankMainFrame extends JPanel {
     }
 
     private final RowDataModel model = new RowDataModel();
-    private final JTable table = new JTable(model);
+    private final JTable table = new JTable(model) {
+        public int getRowHeight(int row) {
+            return 22;
+        }
+    };
 
     public static BitBankMainFrame me() {
         return singleton;
     }
 
-    SimpleDateFormat sdf = new SimpleDateFormat("MM/dd HH:mm:ss");
     JLabel time = new JLabel();
     JLabel jpyBalance = new JLabel();
     JLabel xrpBalance = new JLabel();
@@ -166,7 +169,7 @@ public class BitBankMainFrame extends JPanel {
             table.setDefaultRenderer(Long.class, renderer);
             table.setDefaultRenderer(BigDecimal.class, renderer);
 
-            table.setShowGrid(false);
+            //table.setShowGrid(false);
             TableColumn col = table.getColumnModel().getColumn(0);
             col.setMinWidth(60);
             col.setMaxWidth(60);
@@ -321,7 +324,7 @@ public class BitBankMainFrame extends JPanel {
                     Ticker ticker = bb.getTicker(PAIR);
                     sell = ticker.sell;
                     buy = ticker.buy;
-                    time.setText(sdf.format(ticker.timestamp));
+                    time.setText(DateUtil.me().format1(ticker.timestamp));
 
                     final String sellPrice = ticker.sell.toPlainString();
                     sellXRP.setText(sellPrice);
