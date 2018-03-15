@@ -2,9 +2,12 @@ package gui.popup;
 
 import java.awt.Component;
 
+import javax.swing.JDialog;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
+
+import gui.form.SetupDialog;
 
 public class TablePopupMenu extends JPopupMenu {
     private static final long serialVersionUID = -8857893357535730207L;
@@ -19,6 +22,7 @@ public class TablePopupMenu extends JPopupMenu {
             //            model.addRowData(new RowData("New row", ""));
             //            Rectangle r = table.getCellRect(model.getRowCount() - 1, 0, true);
             //            table.scrollRectToVisible(r);
+
         });
         addSeparator();
         delete = add("delete");
@@ -29,6 +33,12 @@ public class TablePopupMenu extends JPopupMenu {
             //            for (int i = selection.length - 1; i >= 0; i--) {
             //                model.removeRow(table.convertRowIndexToModel(selection[i]));
             //            }
+
+            JDialog dialog = new SetupDialog("title");
+            dialog.pack();
+            dialog.setResizable(false);
+            dialog.setLocationRelativeTo(getRootPane());
+            dialog.setVisible(true);
         });
     }
 
