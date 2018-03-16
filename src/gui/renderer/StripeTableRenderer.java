@@ -20,7 +20,16 @@ public class StripeTableRenderer extends DefaultTableCellRenderer {
             setForeground(table.getForeground());
             setBackground(row % 2 == 1 ? EVEN_COLOR : table.getBackground());
         }
-        setHorizontalAlignment(value instanceof Number ? RIGHT : LEFT);
+        final boolean isNumber = value instanceof Number;
+        if (isNumber) {
+            setHorizontalAlignment(isNumber ? RIGHT : LEFT);
+            Number n = (Number) value;
+            if (n.doubleValue() < 0) {
+                setForeground(Color.RED);
+            } else {
+                //setForeground(table.getSelectionForeground());
+            }
+        }
         return this;
     }
 }

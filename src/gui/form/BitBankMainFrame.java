@@ -45,7 +45,7 @@ import utils.DateUtil;
 public class BitBankMainFrame extends JPanel {
     private static final long serialVersionUID = -8858161812949493525L;
     private static final BitBankMainFrame singleton = new BitBankMainFrame();
-    private static final CurrencyPair PAIR = CurrencyPair.XRP_JPY;
+    private static final CurrencyPair PAIR = CurrencyPair.BTC_JPY;
     private static final List<Long> ORDER_HISTORY = new ArrayList<Long>();
 
     static {
@@ -57,9 +57,10 @@ public class BitBankMainFrame extends JPanel {
         //        ORDER_HISTORY.add(21683589L);
         //        ORDER_HISTORY.add(21684658L);
         //        ORDER_HISTORY.add(21687237L);
-        ORDER_HISTORY.add(21725789L);
-        ORDER_HISTORY.add(21791026L);
+        //        ORDER_HISTORY.add(21725789L);
+        //        ORDER_HISTORY.add(21791026L);
         ORDER_HISTORY.add(21789874L);
+        ORDER_HISTORY.add(368628374L);
     }
 
     private final RowDataModel model = new RowDataModel();
@@ -198,7 +199,7 @@ public class BitBankMainFrame extends JPanel {
                         if (order != null && order.orderId != 0) {
                             // JOptionPane.showMessageDialog(me(), order.toString(), "Info", JOptionPane.INFORMATION_MESSAGE);
                             System.out.println(order);
-                            if (model.addOrUpdRowData(order)) {
+                            if (model.addOrUpdRowData(buy, order)) {
                                 updateXRPBalance();
                             }
                             updateOrderId(order.orderId);
@@ -239,7 +240,7 @@ public class BitBankMainFrame extends JPanel {
                         if (order != null && order.orderId != 0) {
                             // JOptionPane.showMessageDialog(me(), order.toString(), "Info", JOptionPane.INFORMATION_MESSAGE);
                             System.out.println(order);
-                            if (model.addOrUpdRowData(order)) {
+                            if (model.addOrUpdRowData(buy, order)) {
                                 updateXRPBalance();
                             }
                             updateOrderId(order.orderId);
@@ -274,7 +275,7 @@ public class BitBankMainFrame extends JPanel {
                         if (order != null && order.orderId != 0) {
                             // JOptionPane.showMessageDialog(me(), order.toString(), "Info", JOptionPane.INFORMATION_MESSAGE);
                             System.out.println(order);
-                            if (model.addOrUpdRowData(order)) {
+                            if (model.addOrUpdRowData(buy, order)) {
                                 updateXRPBalance();
                             }
                         } else {
@@ -338,7 +339,7 @@ public class BitBankMainFrame extends JPanel {
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            } , 0, delay, TimeUnit.SECONDS);
+            }, 0, delay, TimeUnit.SECONDS);
         }
         {
             ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
@@ -350,7 +351,7 @@ public class BitBankMainFrame extends JPanel {
                     boolean updateXRPBalance = false;
                     for (Order order : orders.orders) {
                         // System.out.println(order);
-                        if (model.addOrUpdRowData(order)) {
+                        if (model.addOrUpdRowData(buy, order)) {
                             updateXRPBalance = true;
                         }
                         updateOrderId(order.orderId);
@@ -361,7 +362,7 @@ public class BitBankMainFrame extends JPanel {
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            } , 0, delay, TimeUnit.SECONDS);
+            }, 0, delay, TimeUnit.SECONDS);
         }
         {
 
@@ -376,12 +377,12 @@ public class BitBankMainFrame extends JPanel {
                     Orders orders = bb.getOrders(PAIR, orderIds);
                     for (Order order : orders.orders) {
                         // System.out.println(order);
-                        model.addOrUpdRowData(order);
+                        model.addOrUpdRowData(buy, order);
                     }
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            } , 0, delay, TimeUnit.SECONDS);
+            }, 0, delay, TimeUnit.SECONDS);
 
         }
     }
@@ -418,7 +419,7 @@ public class BitBankMainFrame extends JPanel {
             } catch (BitbankException | IOException e) {
                 e.printStackTrace();
             }
-        } , 2, TimeUnit.SECONDS);
+        }, 2, TimeUnit.SECONDS);
     }
 
     public void updateWIndowTitlen(String title) {

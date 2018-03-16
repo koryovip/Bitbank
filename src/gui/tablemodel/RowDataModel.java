@@ -1,6 +1,7 @@
 package gui.tablemodel;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 
 import javax.swing.table.DefaultTableModel;
@@ -16,7 +17,9 @@ public class RowDataModel extends DefaultTableModel {
     public static final int COL_INDEX_ORDER_ID = 1;
     public static final int COL_INDEX_AMOUNT = 3;
     public static final int COL_INDEX_STATUS = 5;
-    public static final int COL_INDEX_LASTUPD = 6;
+    public static final int COL_INDEX_DIFF = 6;
+    public static final int COL_INDEX_PROFIT = 7;
+    public static final int COL_INDEX_LASTUPD = 8;
 
     private static final ColumnContext[] COLUMN_ARRAY = { //
             new ColumnContext("No.", Integer.class, false, 10), //
@@ -25,6 +28,8 @@ public class RowDataModel extends DefaultTableModel {
             new ColumnContext("Amount", BigDecimal.class, false, 100), //
             new ColumnContext("Price", BigDecimal.class, false, 100), //
             new ColumnContext("Status", String.class, false, 150), //
+            new ColumnContext("Diff", BigDecimal.class, false, 100), //buy
+            new ColumnContext("Profit", BigDecimal.class, false, 100), //buy
             new ColumnContext("LastUpd", String.class, false, 120), //
     };
     private int number = 1;
@@ -40,10 +45,12 @@ public class RowDataModel extends DefaultTableModel {
         }
     }
 
-    synchronized public boolean addOrUpdRowData(Order order) {
+    synchronized public boolean addOrUpdRowData(final BigDecimal buy, final Order order) {
         boolean updateBalance = false;
         int rowCount = super.getRowCount();
         boolean exists = false;
+        final BigDecimal amount = this.getAmount(order);
+        final BigDecimal price = this.getPrice(order);
         for (int index = 0; index < rowCount; index++) {
             Object orderId = super.getValueAt(index, COL_INDEX_ORDER_ID);
             if (orderId.toString().equals(Long.toString(order.orderId))) {
@@ -54,6 +61,8 @@ public class RowDataModel extends DefaultTableModel {
                     updateBalance = true;
                 }
                 super.setValueAt(order.status, index, COL_INDEX_STATUS);
+                super.setValueAt(buy.subtract(price).setScale(0, RoundingMode.HALF_UP), index, COL_INDEX_DIFF);
+                super.setValueAt(buy.subtract(price).multiply(amount).setScale(0, RoundingMode.HALF_UP), index, COL_INDEX_PROFIT);
                 super.setValueAt(DateUtil.me().format1(new Date()), index, COL_INDEX_LASTUPD);
                 exists = true;
                 break;
@@ -62,9 +71,11 @@ public class RowDataModel extends DefaultTableModel {
         if (!exists) {
             Object[] obj = { number, order.orderId, //
                     order.pair + "(" + order.side.name() + ")", //
-                    this.getAmount(order), //
-                    this.getPrice(order), //
+                    amount, //
+                    price, //
                     order.status, //
+                    buy.subtract(price).setScale(0, RoundingMode.HALF_UP), //
+                    buy.subtract(price).multiply(amount).setScale(0, RoundingMode.HALF_UP), //
                     DateUtil.me().format1(new Date()) //
             };
             super.addRow(obj);
