@@ -169,10 +169,11 @@ public class BitBankMainFrame extends JPanel {
             table.setRowHeight(24);
 
             StripeTableRenderer renderer = new StripeTableRenderer();
-            table.setDefaultRenderer(Object.class, renderer);
+            table.setDefaultRenderer(String.class, renderer);
             table.setDefaultRenderer(Integer.class, renderer);
             table.setDefaultRenderer(Long.class, renderer);
             table.setDefaultRenderer(BigDecimal.class, renderer);
+            table.setDefaultRenderer(Object.class, renderer);
 
             //table.setShowGrid(false);
             model.initColumnSize(table.getColumnModel());
@@ -340,7 +341,7 @@ public class BitBankMainFrame extends JPanel {
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            }, 0, delay, TimeUnit.SECONDS);
+            } , 0, delay, TimeUnit.SECONDS);
         }
         {
             ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
@@ -363,7 +364,7 @@ public class BitBankMainFrame extends JPanel {
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            }, 0, delay, TimeUnit.SECONDS);
+            } , 0, delay, TimeUnit.SECONDS);
         }
         {
 
@@ -383,7 +384,7 @@ public class BitBankMainFrame extends JPanel {
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            }, 0, delay, TimeUnit.SECONDS);
+            } , 0, delay, TimeUnit.SECONDS);
 
         }
     }
@@ -420,7 +421,7 @@ public class BitBankMainFrame extends JPanel {
             } catch (BitbankException | IOException e) {
                 e.printStackTrace();
             }
-        }, 2, TimeUnit.SECONDS);
+        } , 2, TimeUnit.SECONDS);
     }
 
     public void updateWIndowTitlen(String title) {
