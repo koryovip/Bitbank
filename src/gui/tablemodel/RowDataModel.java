@@ -15,16 +15,20 @@ public class RowDataModel extends DefaultTableModel {
     private static final long serialVersionUID = -813484403607557100L;
     public static final int COL_INDEX_NO = 0;
     public static final int COL_INDEX_ORDER_ID = 1;
-    public static final int COL_INDEX_AMOUNT = 3;
-    public static final int COL_INDEX_STATUS = 5;
-    public static final int COL_INDEX_DIFF = 6;
-    public static final int COL_INDEX_PROFIT = 7;
-    public static final int COL_INDEX_LASTUPD = 8;
+    public static final int COL_INDEX_PAIR = 2;
+    public static final int COL_INDEX_SIDE = 3;
+    public static final int COL_INDEX_AMOUNT = 4;
+    public static final int COL_INDEX_PRICE = 5;
+    public static final int COL_INDEX_STATUS = 6;
+    public static final int COL_INDEX_DIFF = 7;
+    public static final int COL_INDEX_PROFIT = 8;
+    public static final int COL_INDEX_LASTUPD = 9;
 
     private static final ColumnContext[] COLUMN_ARRAY = { //
             new ColumnContext("No.", Integer.class, false, 10), //
             new ColumnContext("OrderId", Long.class, false, 50), //
-            new ColumnContext("Info", String.class, false, 100), //
+            new ColumnContext("Pair", String.class, false, 80), //
+            new ColumnContext("Side", String.class, false, 40), //
             new ColumnContext("Amount", BigDecimal.class, false, 100), //
             new ColumnContext("Price", BigDecimal.class, false, 100), //
             new ColumnContext("Status", String.class, false, 150), //
@@ -40,7 +44,7 @@ public class RowDataModel extends DefaultTableModel {
             TableColumn tableColumn = tableColumnModel.getColumn(index++);
             tableColumn.setMinWidth(context.columnWidth);
             if (index == COL_INDEX_NO) {
-                tableColumn.setMaxWidth(context.columnWidth);
+                tableColumn.setWidth(context.columnWidth);
             }
         }
     }
@@ -69,8 +73,10 @@ public class RowDataModel extends DefaultTableModel {
             }
         }
         if (!exists) {
-            Object[] obj = { number, order.orderId, //
-                    order.pair + "(" + order.side.name() + ")", //
+            Object[] obj = { number, //
+                    order.orderId, //
+                    order.pair, //
+                    order.side, //
                     amount, //
                     price, //
                     order.status, //
@@ -103,22 +109,34 @@ public class RowDataModel extends DefaultTableModel {
         return "FULLY_FILLED".equals(status) || "PARTIALLY_FILLED".equals(status);
     }
 
-    public BigDecimal getAxecutedAmount(int rowIndex) {
+    final public BigDecimal getExecutedAmount(int rowIndex) {
         return (BigDecimal) super.getValueAt(rowIndex, COL_INDEX_AMOUNT);
     }
 
-    synchronized public BigDecimal getAmount(Order order) {
+    final public BigDecimal getAveragePrice(int rowIndex) {
+        return (BigDecimal) super.getValueAt(rowIndex, COL_INDEX_PRICE);
+    }
+
+    /*synchronized*/ public BigDecimal getAmount(Order order) {
         if (order.remainingAmount.compareTo(BigDecimal.ZERO) > 0) {
             return order.remainingAmount;
         }
         return order.executedAmount;
     }
 
-    synchronized public BigDecimal getPrice(Order order) {
+    /*synchronized*/ public BigDecimal getPrice(Order order) {
         if (order.averagePrice.compareTo(BigDecimal.ZERO) > 0) {
             return order.averagePrice;
         }
         return order.price;
+    }
+
+    final public boolean isBuy(int row) {
+        return "BUY".equals(getValueAt(row, COL_INDEX_SIDE).toString());
+    }
+
+    final public boolean isSell(int row) {
+        return "SELL".equals(getValueAt(row, COL_INDEX_SIDE).toString());
     }
 
     @Override

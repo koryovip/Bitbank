@@ -59,8 +59,9 @@ public class BitBankMainFrame extends JPanel {
         //        ORDER_HISTORY.add(21687237L);
         //        ORDER_HISTORY.add(21725789L);
         //        ORDER_HISTORY.add(21791026L);
-        ORDER_HISTORY.add(21789874L);
+        // ORDER_HISTORY.add(21789874L);
         ORDER_HISTORY.add(368628374L);
+        ORDER_HISTORY.add(368693910L);
     }
 
     private final RowDataModel model = new RowDataModel();
@@ -234,7 +235,7 @@ public class BitBankMainFrame extends JPanel {
                     }
                     try {
                         BigDecimal price = buy;
-                        BigDecimal amount = model.getAxecutedAmount(selectedRowIndex);
+                        BigDecimal amount = model.getExecutedAmount(selectedRowIndex);
                         System.out.println("sell:" + price.toPlainString() + ", amount:" + amount.toPlainString());
                         Order order = bb.sendOrder(PAIR, price, amount, OrderSide.SELL, OrderType.LIMIT);
                         if (order != null && order.orderId != 0) {
@@ -400,7 +401,7 @@ public class BitBankMainFrame extends JPanel {
                 Assets assets = bb.getAsset();
                 for (Asset asset : assets.assets) {
                     // System.out.println(asset);
-                    if (asset.asset.equals("jpy")) {
+                    if (asset.asset.equals("jpy") || asset.asset.equals("btc")) {
                         System.out.println(String.format("%s/%s", asset.lockedAmount, asset.freeAmount));
                     }
                     if (asset.asset.equals("xrp")) {
