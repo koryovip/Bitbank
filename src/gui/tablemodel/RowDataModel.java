@@ -8,6 +8,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
+import cc.Config;
 import cc.bitbank.entity.Order;
 import utils.DateUtil;
 
@@ -51,6 +52,8 @@ public class RowDataModel extends DefaultTableModel {
         }
     }
 
+    private final int ROUND = Config.me().getRound1();
+
     synchronized public boolean addOrUpdRowData(final BigDecimal buy, final Order order) {
         boolean updateBalance = false;
         int rowCount = super.getRowCount();
@@ -67,8 +70,8 @@ public class RowDataModel extends DefaultTableModel {
                     updateBalance = true;
                 }
                 super.setValueAt(order.status, index, COL_INDEX_STATUS);
-                super.setValueAt(buy.subtract(price).setScale(0, RoundingMode.HALF_UP), index, COL_INDEX_DIFF);
-                super.setValueAt(buy.subtract(price).multiply(amount).setScale(0, RoundingMode.HALF_UP), index, COL_INDEX_PROFIT);
+                super.setValueAt(buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP), index, COL_INDEX_DIFF);
+                super.setValueAt(buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP), index, COL_INDEX_PROFIT);
                 super.setValueAt(DateUtil.me().format1(this.getOrderDate(order)), index, COL_INDEX_DATE);
                 super.setValueAt(DateUtil.me().format1(new Date()), index, COL_INDEX_LASTUPD);
                 exists = true;
@@ -83,8 +86,8 @@ public class RowDataModel extends DefaultTableModel {
                     amount, //
                     price, //
                     order.status, //
-                    buy.subtract(price).setScale(0, RoundingMode.HALF_UP), //
-                    buy.subtract(price).multiply(amount).setScale(0, RoundingMode.HALF_UP), //
+                    buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP), //
+                    buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP), //
                     DateUtil.me().format1(this.getOrderDate(order)), //
                     DateUtil.me().format1(new Date()) //
             };

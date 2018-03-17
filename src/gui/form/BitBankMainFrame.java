@@ -65,10 +65,13 @@ public class BitBankMainFrame extends JPanel {
         //        ORDER_HISTORY.add(21725789L);
         //        ORDER_HISTORY.add(21791026L);
         // ORDER_HISTORY.add(21789874L);
-        ORDER_HISTORY.add(368628374L);
-        ORDER_HISTORY.add(368693910L);
-        ORDER_HISTORY.add(369380357L);
-        ORDER_HISTORY.add(369388108L);
+        //        ORDER_HISTORY.add(368628374L);
+        //        ORDER_HISTORY.add(368693910L);
+        //        ORDER_HISTORY.add(369380357L);
+        //        ORDER_HISTORY.add(369388108L);
+        ORDER_HISTORY.add(22369133L);
+        ORDER_HISTORY.add(22371013L);
+        ORDER_HISTORY.add(22372230L);
     }
 
     private final RowDataModel model = new RowDataModel();
@@ -196,15 +199,16 @@ public class BitBankMainFrame extends JPanel {
             add(jScrollPane);
         }
         {
-            JButton btn = new JButton("Buy");
+            final float buyAmountFixed = 1f;
+            JButton btn = new JButton("Buy(" + buyAmountFixed + ")");
             btn.setFont(font14);
-            btn.setBounds(10, 440, 100, 20);
+            btn.setBounds(10, 440, 150, tableRowHight);
             btn.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent event) {
                     try {
                         BigDecimal price = sell;
-                        BigDecimal amount = new BigDecimal(1);
+                        BigDecimal amount = new BigDecimal(buyAmountFixed);
                         logger.debug("buy:" + price.toPlainString());
                         Order order = bb.sendOrder(Config.me().getPair(), price, amount, OrderSide.BUY, OrderType.LIMIT);
                         if (order != null && order.orderId != 0) {
@@ -230,7 +234,7 @@ public class BitBankMainFrame extends JPanel {
         {
             JButton btn = new JButton("Sell");
             btn.setFont(font14);
-            btn.setBounds(160, 440, 100, 20);
+            btn.setBounds(200, 440, 100, tableRowHight);
             btn.addActionListener(new ActionListener() {
 
                 @Override
@@ -271,7 +275,7 @@ public class BitBankMainFrame extends JPanel {
         {
             JButton btn = new JButton("Cancel");
             btn.setFont(font14);
-            btn.setBounds(600, 440, 100, 20);
+            btn.setBounds(600, 440, 100, tableRowHight);
             btn.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent event) {
@@ -386,10 +390,16 @@ public class BitBankMainFrame extends JPanel {
                         //logger.debug(orderIds[ii]);
                     }
                     Orders orders = bb.getOrders(Config.me().getPair(), orderIds);
-                    logger.debug("getOrders");
+                    logger.debug("getOrders:" + orders.orders == null ? 0 : orders.orders.length);
+                    boolean updateXRPBalance = false;
                     for (Order order : orders.orders) {
-                        logger.debug(order);
-                        model.addOrUpdRowData(buy, order);
+                        // logger.debug(order);
+                        if (model.addOrUpdRowData(buy, order)) {
+                            updateXRPBalance = true;
+                        }
+                    }
+                    if (updateXRPBalance) {
+                        updateXRPBalance();
                     }
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
