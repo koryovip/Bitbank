@@ -22,7 +22,8 @@ public class RowDataModel extends DefaultTableModel {
     public static final int COL_INDEX_STATUS = 6;
     public static final int COL_INDEX_DIFF = 7;
     public static final int COL_INDEX_PROFIT = 8;
-    public static final int COL_INDEX_LASTUPD = 9;
+    public static final int COL_INDEX_DATE = 9;
+    public static final int COL_INDEX_LASTUPD = 10;
 
     private static final ColumnContext[] COLUMN_ARRAY = { //
             new ColumnContext("No.", Integer.class, false, 10), //
@@ -32,8 +33,9 @@ public class RowDataModel extends DefaultTableModel {
             new ColumnContext("Amount", BigDecimal.class, false, 100), //
             new ColumnContext("Price", BigDecimal.class, false, 100), //
             new ColumnContext("Status", String.class, false, 150), //
-            new ColumnContext("Diff", BigDecimal.class, false, 100), //buy
+            new ColumnContext("Buy-Price", BigDecimal.class, false, 100), //buy
             new ColumnContext("Profit", BigDecimal.class, false, 100), //buy
+            new ColumnContext("Date", String.class, false, 120), //
             new ColumnContext("LastUpd", String.class, false, 120), //
     };
     private int number = 1;
@@ -67,6 +69,7 @@ public class RowDataModel extends DefaultTableModel {
                 super.setValueAt(order.status, index, COL_INDEX_STATUS);
                 super.setValueAt(buy.subtract(price).setScale(0, RoundingMode.HALF_UP), index, COL_INDEX_DIFF);
                 super.setValueAt(buy.subtract(price).multiply(amount).setScale(0, RoundingMode.HALF_UP), index, COL_INDEX_PROFIT);
+                super.setValueAt(DateUtil.me().format1(this.getOrderDate(order)), index, COL_INDEX_DATE);
                 super.setValueAt(DateUtil.me().format1(new Date()), index, COL_INDEX_LASTUPD);
                 exists = true;
                 break;
@@ -82,6 +85,7 @@ public class RowDataModel extends DefaultTableModel {
                     order.status, //
                     buy.subtract(price).setScale(0, RoundingMode.HALF_UP), //
                     buy.subtract(price).multiply(amount).setScale(0, RoundingMode.HALF_UP), //
+                    DateUtil.me().format1(this.getOrderDate(order)), //
                     DateUtil.me().format1(new Date()) //
             };
             super.addRow(obj);
@@ -89,6 +93,19 @@ public class RowDataModel extends DefaultTableModel {
             number++;
         }
         return updateBalance;
+    }
+
+    public Date getOrderDate(Order order) {
+        if (order.executedAt != null) {
+            return order.executedAt;
+        }
+        if (order.canceledAt != null) {
+            return order.canceledAt;
+        }
+        if (order.orderedAt != null) {
+            return order.orderedAt;
+        }
+        return null;
     }
 
     public long getOrderId(int rowIndex) {

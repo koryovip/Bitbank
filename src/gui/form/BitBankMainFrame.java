@@ -26,6 +26,9 @@ import javax.swing.JTable;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import cc.Config;
 import cc.bitbank.Bitbankcc;
 import cc.bitbank.entity.Assets;
@@ -43,9 +46,11 @@ import gui.tablemodel.RowDataModel;
 import utils.DateUtil;
 
 public class BitBankMainFrame extends JPanel {
+
+    private Logger logger = LogManager.getLogger();
+
     private static final long serialVersionUID = -8858161812949493525L;
     private static final BitBankMainFrame singleton = new BitBankMainFrame();
-    private static final CurrencyPair PAIR = CurrencyPair.BTC_JPY;
     private static final List<Long> ORDER_HISTORY = new ArrayList<Long>();
 
     static {
@@ -62,6 +67,8 @@ public class BitBankMainFrame extends JPanel {
         // ORDER_HISTORY.add(21789874L);
         ORDER_HISTORY.add(368628374L);
         ORDER_HISTORY.add(368693910L);
+        ORDER_HISTORY.add(369380357L);
+        ORDER_HISTORY.add(369388108L);
     }
 
     private final RowDataModel model = new RowDataModel();
@@ -97,7 +104,7 @@ public class BitBankMainFrame extends JPanel {
 
         setLayout(null);
         setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-        setPreferredSize(new Dimension(800, 480));
+        setPreferredSize(new Dimension(1300, 480));
 
         init();
 
@@ -161,12 +168,14 @@ public class BitBankMainFrame extends JPanel {
         //        });
         //        add(btn);
 
-        Font font14 = new Font("MS Gothic", Font.PLAIN, 16);
+        int fontSize = 20;
+        int tableRowHight = fontSize + 6;
+        Font font14 = new Font("MS Gothic", Font.PLAIN, fontSize);
         {
             // JTable table = new JTable(model);
             table.setFont(font14);
             table.getTableHeader().setFont(font14);
-            table.setRowHeight(24);
+            table.setRowHeight(tableRowHight);
 
             StripeTableRenderer renderer = new StripeTableRenderer();
             table.setDefaultRenderer(String.class, renderer);
@@ -183,7 +192,7 @@ public class BitBankMainFrame extends JPanel {
             table.setFillsViewportHeight(true);
             table.setComponentPopupMenu(new TablePopupMenu());
             final JScrollPane jScrollPane = new JScrollPane(table);
-            jScrollPane.setBounds(10, 130, 900, 300);
+            jScrollPane.setBounds(10, 130, 1200, 300);
             add(jScrollPane);
         }
         {
@@ -196,11 +205,11 @@ public class BitBankMainFrame extends JPanel {
                     try {
                         BigDecimal price = sell;
                         BigDecimal amount = new BigDecimal(1);
-                        System.out.println("buy:" + price.toPlainString());
-                        Order order = bb.sendOrder(PAIR, price, amount, OrderSide.BUY, OrderType.LIMIT);
+                        logger.debug("buy:" + price.toPlainString());
+                        Order order = bb.sendOrder(Config.me().getPair(), price, amount, OrderSide.BUY, OrderType.LIMIT);
                         if (order != null && order.orderId != 0) {
                             // JOptionPane.showMessageDialog(me(), order.toString(), "Info", JOptionPane.INFORMATION_MESSAGE);
-                            System.out.println(order);
+                            logger.debug(order);
                             if (model.addOrUpdRowData(buy, order)) {
                                 updateXRPBalance();
                             }
@@ -237,11 +246,11 @@ public class BitBankMainFrame extends JPanel {
                     try {
                         BigDecimal price = buy;
                         BigDecimal amount = model.getExecutedAmount(selectedRowIndex);
-                        System.out.println("sell:" + price.toPlainString() + ", amount:" + amount.toPlainString());
-                        Order order = bb.sendOrder(PAIR, price, amount, OrderSide.SELL, OrderType.LIMIT);
+                        logger.debug("sell:" + price.toPlainString() + ", amount:" + amount.toPlainString());
+                        Order order = bb.sendOrder(Config.me().getPair(), price, amount, OrderSide.SELL, OrderType.LIMIT);
                         if (order != null && order.orderId != 0) {
                             // JOptionPane.showMessageDialog(me(), order.toString(), "Info", JOptionPane.INFORMATION_MESSAGE);
-                            System.out.println(order);
+                            logger.debug(order);
                             if (model.addOrUpdRowData(buy, order)) {
                                 updateXRPBalance();
                             }
@@ -271,12 +280,12 @@ public class BitBankMainFrame extends JPanel {
                         return;
                     }
                     final long orderId = model.getOrderId(selectedRowIndex);
-                    System.out.println(orderId);
+                    logger.debug(orderId);
                     try {
-                        Order order = bb.cancelOrder(PAIR, orderId);
+                        Order order = bb.cancelOrder(Config.me().getPair(), orderId);
                         if (order != null && order.orderId != 0) {
                             // JOptionPane.showMessageDialog(me(), order.toString(), "Info", JOptionPane.INFORMATION_MESSAGE);
-                            System.out.println(order);
+                            logger.debug(order);
                             if (model.addOrUpdRowData(buy, order)) {
                                 updateXRPBalance();
                             }
@@ -291,7 +300,6 @@ public class BitBankMainFrame extends JPanel {
             });
             add(btn);
         }
-
     }
 
     private void update(final long delay) {
@@ -327,7 +335,8 @@ public class BitBankMainFrame extends JPanel {
             ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
             service.scheduleWithFixedDelay(() -> {
                 try {
-                    Ticker ticker = bb.getTicker(PAIR);
+                    Ticker ticker = bb.getTicker(Config.me().getPair());
+                    logger.debug("getTicker");
                     sell = ticker.sell;
                     buy = ticker.buy;
                     time.setText(DateUtil.me().format1(ticker.timestamp));
@@ -349,48 +358,49 @@ public class BitBankMainFrame extends JPanel {
                 try {
                     Map<String, Long> option = new HashMap<String, Long>();
                     option.put("count", 10L);
-                    Orders orders = bb.getActiveOrders(PAIR, option);
-                    boolean updateXRPBalance = false;
+                    Orders orders = bb.getActiveOrders(Config.me().getPair(), option);
+                    logger.debug("getActiveOrders");
+                    //                    boolean updateXRPBalance = false;
                     for (Order order : orders.orders) {
-                        // System.out.println(order);
-                        if (model.addOrUpdRowData(buy, order)) {
-                            updateXRPBalance = true;
-                        }
+                        logger.debug(order);
+                        //                        if (model.addOrUpdRowData(buy, order)) {
+                        //                            updateXRPBalance = true;
+                        //                        }
                         updateOrderId(order.orderId);
                     }
-                    if (updateXRPBalance) {
-                        updateXRPBalance();
-                    }
+                    //                    if (updateXRPBalance) {
+                    //                        updateXRPBalance();
+                    //                    }
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            } , 0, delay, TimeUnit.SECONDS);
+            } , 1, delay, TimeUnit.SECONDS);
         }
         {
-
-            // long[] orderIds = new long[] { 21631360, 21631793, 21633650 };
             ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
             service.scheduleWithFixedDelay(() -> {
                 try {
                     long[] orderIds = new long[ORDER_HISTORY.size()];
                     for (int ii = 0; ii < orderIds.length; ii++) {
                         orderIds[ii] = ORDER_HISTORY.get(ii);
+                        //logger.debug(orderIds[ii]);
                     }
-                    Orders orders = bb.getOrders(PAIR, orderIds);
+                    Orders orders = bb.getOrders(Config.me().getPair(), orderIds);
+                    logger.debug("getOrders");
                     for (Order order : orders.orders) {
-                        // System.out.println(order);
+                        logger.debug(order);
                         model.addOrUpdRowData(buy, order);
                     }
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            } , 0, delay, TimeUnit.SECONDS);
-
+            } , 2, delay, TimeUnit.SECONDS);
         }
     }
 
     private void updateOrderId(long orderId) {
         if (!ORDER_HISTORY.contains(orderId)) {
+            logger.debug("add order id:" + orderId);
             ORDER_HISTORY.add(orderId);
         }
     }
@@ -401,9 +411,9 @@ public class BitBankMainFrame extends JPanel {
             try {
                 Assets assets = bb.getAsset();
                 for (Asset asset : assets.assets) {
-                    // System.out.println(asset);
+                    // logger.debug(asset);
                     if (asset.asset.equals("jpy") || asset.asset.equals("btc")) {
-                        System.out.println(String.format("%s/%s", asset.lockedAmount, asset.freeAmount));
+                        logger.debug(String.format("%s/%s", asset.lockedAmount, asset.freeAmount));
                     }
                     if (asset.asset.equals("xrp")) {
                         /*
