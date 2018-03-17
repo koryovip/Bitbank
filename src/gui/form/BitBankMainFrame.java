@@ -88,6 +88,7 @@ public class BitBankMainFrame extends JPanel {
 
     JLabel time = new JLabel();
     JLabel jpyBalance = new JLabel();
+    JLabel btcBalance = new JLabel();
     JLabel xrpBalance = new JLabel();
     JLabel sellXRP = new JLabel();
     JLabel buyXRP = new JLabel();
@@ -124,7 +125,9 @@ public class BitBankMainFrame extends JPanel {
 
         jpyBalance.setBounds(310, 10, 300, 20);
         add(jpyBalance);
-        xrpBalance.setBounds(310, 10, 300, 20);
+        btcBalance.setBounds(310, 40, 300, 20);
+        add(btcBalance);
+        xrpBalance.setBounds(310, 70, 300, 20);
         add(xrpBalance);
 
         sellXRP.setBounds(10, 40, w1, 20);
@@ -340,7 +343,7 @@ public class BitBankMainFrame extends JPanel {
             service.scheduleWithFixedDelay(() -> {
                 try {
                     Ticker ticker = bb.getTicker(Config.me().getPair());
-                    logger.debug("getTicker");
+                    //                    logger.debug("getTicker");
                     sell = ticker.sell;
                     buy = ticker.buy;
                     time.setText(DateUtil.me().format1(ticker.timestamp));
@@ -363,7 +366,7 @@ public class BitBankMainFrame extends JPanel {
                     Map<String, Long> option = new HashMap<String, Long>();
                     option.put("count", 10L);
                     Orders orders = bb.getActiveOrders(Config.me().getPair(), option);
-                    logger.debug("getActiveOrders");
+                    //                    logger.debug("getActiveOrders");
                     //                    boolean updateXRPBalance = false;
                     for (Order order : orders.orders) {
                         logger.debug(order);
@@ -390,7 +393,7 @@ public class BitBankMainFrame extends JPanel {
                         //logger.debug(orderIds[ii]);
                     }
                     Orders orders = bb.getOrders(Config.me().getPair(), orderIds);
-                    logger.debug("getOrders:" + orders.orders == null ? 0 : orders.orders.length);
+                    //                    logger.debug("getOrders:" + orders.orders == null ? 0 : orders.orders.length);
                     boolean updateXRPBalance = false;
                     for (Order order : orders.orders) {
                         // logger.debug(order);
@@ -415,33 +418,45 @@ public class BitBankMainFrame extends JPanel {
         }
     }
 
-    final public void updateXRPBalance() {
-        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-        service.schedule(() -> {
-            try {
-                Assets assets = bb.getAsset();
-                for (Asset asset : assets.assets) {
-                    // logger.debug(asset);
-                    if (asset.asset.equals("jpy") || asset.asset.equals("btc")) {
-                        logger.debug(String.format("%s/%s", asset.lockedAmount, asset.freeAmount));
-                    }
-                    if (asset.asset.equals("xrp")) {
-                        /*
-                         * asset アセット名
-                        amount_precision 小数点の表示精度
-                        onhand_amount 保有量
-                        locked_amount ロックされている量
-                        free_amount 利用可能な量
-                        withdrawal_fee 引き出し手数料
-                         */
-                        xrpBalance.setText(String.format("%s/%s", asset.lockedAmount, asset.freeAmount));
-                        break;
-                    }
+    boolean isUpdatingBalance = false;
+
+    synchronized final private void updateXRPBalance() {
+        if (isUpdatingBalance) {
+            logger.debug("Balance更新中");
+            return;
+        }
+        try {
+            isUpdatingBalance = true;
+            //            logger.debug("isUpdatingBalance:" + isUpdatingBalance);
+            Assets assets = bb.getAsset();
+            /*
+                    asset アセット名
+                    amount_precision 小数点の表示精度
+                    onhand_amount 保有量
+                    locked_amount ロックされている量
+                    free_amount 利用可能な量
+                    withdrawal_fee 引き出し手数料
+             */
+            for (Asset asset : assets.assets) {
+                // logger.debug(asset);
+                if (asset.asset.equals("jpy")) {
+                    jpyBalance.setText(String.format("%s/%s", asset.lockedAmount.toPlainString(), asset.freeAmount.toPlainString()));
+                } else if (asset.asset.equals("btc")) {
+                    btcBalance.setText(String.format("%s/%s", asset.lockedAmount.toPlainString(), asset.freeAmount.toPlainString()));
+                } else if (asset.asset.equals("xrp")) {
+                    xrpBalance.setText(String.format("%s/%s", asset.lockedAmount.toPlainString(), asset.freeAmount.toPlainString()));
+                    // break;
                 }
-            } catch (BitbankException | IOException e) {
-                e.printStackTrace();
             }
-        } , 2, TimeUnit.SECONDS);
+        } catch (BitbankException | IOException e) {
+            e.printStackTrace();
+        } finally {
+            isUpdatingBalance = false;
+            //            logger.debug("isUpdatingBalance:" + isUpdatingBalance);
+        }
+        //        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+        //        service.schedule(() -> {
+        //        } , 2, TimeUnit.SECONDS);
     }
 
     public void updateWIndowTitlen(String title) {

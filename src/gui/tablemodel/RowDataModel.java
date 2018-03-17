@@ -124,10 +124,19 @@ public class RowDataModel extends DefaultTableModel {
      * @param rowIndex
      * @return
      */
-    public boolean canSell(int rowIndex) {
+    final public boolean canSell(int rowIndex) {
         String status = super.getValueAt(rowIndex, COL_INDEX_STATUS).toString();
         return "FULLY_FILLED".equals(status) || "PARTIALLY_FILLED".equals(status);
     }
+
+    final public boolean canSetTC(int rowIndex) {
+        String status = super.getValueAt(rowIndex, COL_INDEX_STATUS).toString();
+        return "FULLY_FILLED".equals(status) || "PARTIALLY_FILLED".equals(status);
+    }
+
+    //    final public BigDecimal getBought(int rowIndex) {
+    //        return (BigDecimal) super.getValueAt(rowIndex, COL_INDEX_PRICE);
+    //    }
 
     final public BigDecimal getExecutedAmount(int rowIndex) {
         return (BigDecimal) super.getValueAt(rowIndex, COL_INDEX_AMOUNT);

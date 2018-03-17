@@ -10,6 +10,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.JTable;
 
+import cc.Config;
 import gui.form.BitBankMainFrame;
 import gui.form.SetupDialog;
 import gui.tablemodel.RowDataModel;
@@ -30,7 +31,6 @@ public class TablePopupMenu extends JPopupMenu {
             BigDecimal buyTotal = BigDecimal.ZERO;
             BigDecimal sellTotal = BigDecimal.ZERO;
             for (int row : table.getSelectedRows()) {
-                System.out.println(model.getValueAt(row, RowDataModel.COL_INDEX_SIDE));
                 if (model.isBuy(row)) {
                     buyTotal = buyTotal.add(model.getExecutedAmount(row).multiply(model.getAveragePrice(row)));
                 }
@@ -38,8 +38,9 @@ public class TablePopupMenu extends JPopupMenu {
                     sellTotal = sellTotal.add(model.getExecutedAmount(row).multiply(model.getAveragePrice(row)));
                 }
             }
-            System.out.println(sellTotal.subtract(buyTotal));
-            JOptionPane.showMessageDialog(BitBankMainFrame.me(), sellTotal.subtract(buyTotal).setScale(0, RoundingMode.HALF_UP), "Profit", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(BitBankMainFrame.me(), //
+                    sellTotal.subtract(buyTotal).setScale(Config.me().getRound1(), RoundingMode.HALF_UP), //
+                    "Profit", JOptionPane.INFORMATION_MESSAGE);
             //            model.addRowData(new RowData("New row", ""));
             //            Rectangle r = table.getCellRect(model.getRowCount() - 1, 0, true);
             //            table.scrollRectToVisible(r);
@@ -48,14 +49,14 @@ public class TablePopupMenu extends JPopupMenu {
         addSeparator();
         setTS = add("setTS");
         setTS.addActionListener(e -> {
-            //            JTable table = (JTable) getInvoker();
-            //            DefaultTableModel model = (DefaultTableModel) table.getModel();
+            JTable table = (JTable) getInvoker();
+            RowDataModel model = (RowDataModel) table.getModel();
             //            int[] selection = table.getSelectedRows();
             //            for (int i = selection.length - 1; i >= 0; i--) {
             //                model.removeRow(table.convertRowIndexToModel(selection[i]));
             //            }
 
-            JDialog dialog = new SetupDialog("title");
+            JDialog dialog = new SetupDialog("title", model.getAveragePrice(table.getSelectedRow()));
             dialog.pack();
             dialog.setResizable(false);
             dialog.setLocationRelativeTo(getRootPane());
@@ -66,8 +67,10 @@ public class TablePopupMenu extends JPopupMenu {
     @Override
     public void show(Component c, int x, int y) {
         if (c instanceof JTable) {
-            calc.setEnabled(((JTable) c).getSelectedRowCount() > 0);
-            setTS.setEnabled(((JTable) c).getSelectedRowCount() == 1);
+            JTable table = (JTable) c;
+            RowDataModel model = (RowDataModel) table.getModel();
+            calc.setEnabled(table.getSelectedRowCount() > 0);
+            setTS.setEnabled((table.getSelectedRowCount() == 1) && model.canSetTC(table.getSelectedRow()));
             super.show(c, x, y);
         }
     }
