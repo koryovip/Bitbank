@@ -27,19 +27,23 @@ public class TablePopupMenu extends JPopupMenu {
         calc.addActionListener(e -> {
             JTable table = (JTable) getInvoker();
             RowDataModel model = (RowDataModel) table.getModel();
-            BigDecimal profit = BigDecimal.ZERO;
             BigDecimal buyTotal = BigDecimal.ZERO;
+            BigDecimal buyTotalExecutedAmount = BigDecimal.ZERO;
             BigDecimal sellTotal = BigDecimal.ZERO;
             for (int row : table.getSelectedRows()) {
                 if (model.isBuy(row)) {
                     buyTotal = buyTotal.add(model.getExecutedAmount(row).multiply(model.getAveragePrice(row)));
+                    buyTotalExecutedAmount = buyTotalExecutedAmount.add(model.getExecutedAmount(row));
                 }
                 if (model.isSell(row)) {
                     sellTotal = sellTotal.add(model.getExecutedAmount(row).multiply(model.getAveragePrice(row)));
                 }
             }
+            String msg = "Profit:" + sellTotal.subtract(buyTotal).setScale(Config.me().getRound1(), RoundingMode.HALF_UP).toPlainString();
+            msg += "\r\n";
+            msg += "AveragePrice:" + buyTotal.divide(buyTotalExecutedAmount, Config.me().getRound1(), RoundingMode.HALF_UP).toPlainString();
             JOptionPane.showMessageDialog(BitBankMainFrame.me(), //
-                    sellTotal.subtract(buyTotal).setScale(Config.me().getRound1(), RoundingMode.HALF_UP), //
+                    msg, //
                     "Profit", JOptionPane.INFORMATION_MESSAGE);
             //            model.addRowData(new RowData("New row", ""));
             //            Rectangle r = table.getCellRect(model.getRowCount() - 1, 0, true);

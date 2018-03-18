@@ -12,12 +12,19 @@ public class DateUtil {
     }
 
     private final ThreadLocal<DateFormat> sdf1;
+    private final ThreadLocal<DateFormat> sdf2;
 
     private DateUtil() {
         sdf1 = new ThreadLocal<DateFormat>() {
             @Override
             protected DateFormat initialValue() {
                 return new SimpleDateFormat("MM/dd HH:mm:ss");
+            }
+        };
+        sdf2 = new ThreadLocal<DateFormat>() {
+            @Override
+            protected DateFormat initialValue() {
+                return new SimpleDateFormat("HH:mm:ss MM/dd");
             }
         };
     }
@@ -28,6 +35,14 @@ public class DateUtil {
 
     final public String format1(long dateTime) {
         return this.format1(new Date(dateTime));
+    }
+
+    final public String format2(Date date) {
+        return sdf2.get().format(date);
+    }
+
+    final public String format2(long dateTime) {
+        return this.format2(new Date(dateTime));
     }
 
     public static void main(String[] args) {

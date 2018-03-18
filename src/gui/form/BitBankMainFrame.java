@@ -40,6 +40,7 @@ import cc.bitbank.entity.enums.CurrencyPair;
 import cc.bitbank.entity.enums.OrderSide;
 import cc.bitbank.entity.enums.OrderType;
 import cc.bitbank.exception.BitbankException;
+import gui.TS;
 import gui.popup.TablePopupMenu;
 import gui.renderer.StripeTableRenderer;
 import gui.tablemodel.RowDataModel;
@@ -52,6 +53,7 @@ public class BitBankMainFrame extends JPanel {
     private static final long serialVersionUID = -8858161812949493525L;
     private static final BitBankMainFrame singleton = new BitBankMainFrame();
     private static final List<Long> ORDER_HISTORY = new ArrayList<Long>();
+    private static final List<TS> TS_LIST = new ArrayList<TS>();
 
     static {
         //        ORDER_HISTORY.add(21631360L);
@@ -69,9 +71,20 @@ public class BitBankMainFrame extends JPanel {
         //        ORDER_HISTORY.add(368693910L);
         //        ORDER_HISTORY.add(369380357L);
         //        ORDER_HISTORY.add(369388108L);
-        ORDER_HISTORY.add(22369133L);
-        ORDER_HISTORY.add(22371013L);
-        ORDER_HISTORY.add(22372230L);
+        //ORDER_HISTORY.add(22369133L);
+        //ORDER_HISTORY.add(22371013L);
+        //ORDER_HISTORY.add(22372230L);
+
+        ORDER_HISTORY.add(22404556L);
+        ORDER_HISTORY.add(22404937L);
+        ORDER_HISTORY.add(22405347L); // cancel
+        ORDER_HISTORY.add(22405944L); // cancel
+        ORDER_HISTORY.add(22406015L);
+        ORDER_HISTORY.add(22408409L);
+        ORDER_HISTORY.add(22410923L);
+        ORDER_HISTORY.add(22416810L);
+
+        TS_LIST.add(new TS(22372230L, new BigDecimal(70.0), new BigDecimal(69.5), new BigDecimal(0.5)));
     }
 
     private final RowDataModel model = new RowDataModel();
@@ -105,7 +118,6 @@ public class BitBankMainFrame extends JPanel {
     final Bitbankcc bb = new Bitbankcc();
 
     private BitBankMainFrame() {
-
         setLayout(null);
         setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
         setPreferredSize(new Dimension(1300, 480));
@@ -198,7 +210,7 @@ public class BitBankMainFrame extends JPanel {
             table.setFillsViewportHeight(true);
             table.setComponentPopupMenu(new TablePopupMenu());
             final JScrollPane jScrollPane = new JScrollPane(table);
-            jScrollPane.setBounds(10, 130, 1200, 300);
+            jScrollPane.setBounds(10, 130, 1400, 300);
             add(jScrollPane);
         }
         {
@@ -346,6 +358,17 @@ public class BitBankMainFrame extends JPanel {
                     //                    logger.debug("getTicker");
                     sell = ticker.sell;
                     buy = ticker.buy;
+
+                    if (TS_LIST.size() > 0) {
+                        for (TS ts : TS_LIST) {
+                            boolean check = ts.check(buy);
+                            model.updRowData2(ts);
+                            if (check) {
+                                //                                logger.debug(ts.getSellPrice());
+                            }
+                        }
+                    }
+
                     time.setText(DateUtil.me().format1(ticker.timestamp));
 
                     final String sellPrice = ticker.sell.toPlainString();

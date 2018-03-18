@@ -10,6 +10,7 @@ import javax.swing.table.TableColumnModel;
 
 import cc.Config;
 import cc.bitbank.entity.Order;
+import gui.TS;
 import utils.DateUtil;
 
 public class RowDataModel extends DefaultTableModel {
@@ -24,7 +25,9 @@ public class RowDataModel extends DefaultTableModel {
     public static final int COL_INDEX_DIFF = 7;
     public static final int COL_INDEX_PROFIT = 8;
     public static final int COL_INDEX_DATE = 9;
-    public static final int COL_INDEX_LASTUPD = 10;
+    public static final int COL_INDEX_LOSTCUT = 10;
+    public static final int COL_INDEX_TRALINGSTOP = 11;
+    public static final int COL_INDEX_LASTUPD = 12;
 
     private static final ColumnContext[] COLUMN_ARRAY = { //
             new ColumnContext("No.", Integer.class, false, 10), //
@@ -37,6 +40,8 @@ public class RowDataModel extends DefaultTableModel {
             new ColumnContext("Buy-Price", BigDecimal.class, false, 100), //buy
             new ColumnContext("Profit", BigDecimal.class, false, 100), //buy
             new ColumnContext("Date", String.class, false, 120), //
+            new ColumnContext("LostCut", BigDecimal.class, false, 100), //
+            new ColumnContext("TralingStop", BigDecimal.class, false, 100), //
             new ColumnContext("LastUpd", String.class, false, 120), //
     };
     private int number = 1;
@@ -56,10 +61,12 @@ public class RowDataModel extends DefaultTableModel {
 
     synchronized public boolean addOrUpdRowData(final BigDecimal buy, final Order order) {
         boolean updateBalance = false;
-        int rowCount = super.getRowCount();
         boolean exists = false;
         final BigDecimal amount = this.getAmount(order);
         final BigDecimal price = this.getPrice(order);
+        int rowCount = super.getRowCount();
+        BigDecimal diff = buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP);
+        BigDecimal profit = buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP);
         for (int index = 0; index < rowCount; index++) {
             Object orderId = super.getValueAt(index, COL_INDEX_ORDER_ID);
             if (orderId.toString().equals(Long.toString(order.orderId))) {
@@ -70,10 +77,12 @@ public class RowDataModel extends DefaultTableModel {
                     updateBalance = true;
                 }
                 super.setValueAt(order.status, index, COL_INDEX_STATUS);
-                super.setValueAt(buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP), index, COL_INDEX_DIFF);
-                super.setValueAt(buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP), index, COL_INDEX_PROFIT);
-                super.setValueAt(DateUtil.me().format1(this.getOrderDate(order)), index, COL_INDEX_DATE);
-                super.setValueAt(DateUtil.me().format1(new Date()), index, COL_INDEX_LASTUPD);
+                if (this.canSell(index)) {
+                    super.setValueAt(diff, index, COL_INDEX_DIFF);
+                    super.setValueAt(profit, index, COL_INDEX_PROFIT);
+                }
+                super.setValueAt(DateUtil.me().format2(this.getOrderDate(order)), index, COL_INDEX_DATE);
+                super.setValueAt(DateUtil.me().format2(new Date()), index, COL_INDEX_LASTUPD);
                 exists = true;
                 break;
             }
@@ -86,16 +95,30 @@ public class RowDataModel extends DefaultTableModel {
                     amount, //
                     price, //
                     order.status, //
-                    buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP), //
-                    buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP), //
-                    DateUtil.me().format1(this.getOrderDate(order)), //
-                    DateUtil.me().format1(new Date()) //
+                    canSell(order) ? diff : BigDecimal.ZERO, //
+                    canSell(order) ? profit : BigDecimal.ZERO, //
+                    DateUtil.me().format2(this.getOrderDate(order)), //
+                    BigDecimal.ZERO, // lostcut
+                    BigDecimal.ZERO, //
+                    DateUtil.me().format2(new Date()) //
             };
             super.addRow(obj);
             updateBalance = true;
             number++;
         }
         return updateBalance;
+    }
+
+    synchronized public void updRowData2(TS ts) {
+        int rowCount = super.getRowCount();
+        for (int index = 0; index < rowCount; index++) {
+            Object orderId = super.getValueAt(index, COL_INDEX_ORDER_ID);
+            if (!orderId.toString().equals(Long.toString(ts.orderId))) {
+                continue;
+            }
+            super.setValueAt(ts.lostCut, index, COL_INDEX_LOSTCUT);
+            super.setValueAt(ts.getSellPrice(), index, COL_INDEX_TRALINGSTOP);
+        }
     }
 
     public Date getOrderDate(Order order) {
@@ -126,6 +149,14 @@ public class RowDataModel extends DefaultTableModel {
      */
     final public boolean canSell(int rowIndex) {
         String status = super.getValueAt(rowIndex, COL_INDEX_STATUS).toString();
+        return canSell(status);
+    }
+
+    final public boolean canSell(Order order) {
+        return canSell(order.status);
+    }
+
+    final private boolean canSell(String status) {
         return "FULLY_FILLED".equals(status) || "PARTIALLY_FILLED".equals(status);
     }
 
