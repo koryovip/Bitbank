@@ -15,31 +15,34 @@ import utils.DateUtil;
 
 public class RowDataModel extends DefaultTableModel {
     private static final long serialVersionUID = -813484403607557100L;
-    public static final int COL_INDEX_NO = 0;
-    public static final int COL_INDEX_ORDER_ID = 1;
-    public static final int COL_INDEX_PAIR = 2;
-    public static final int COL_INDEX_SIDE = 3;
-    public static final int COL_INDEX_AMOUNT = 4;
-    public static final int COL_INDEX_PRICE = 5;
-    public static final int COL_INDEX_STATUS = 6;
-    public static final int COL_INDEX_DIFF = 7;
-    public static final int COL_INDEX_PROFIT = 8;
-    public static final int COL_INDEX_DATE = 9;
-    public static final int COL_INDEX_LOSTCUT = 10;
-    public static final int COL_INDEX_TRALINGSTOP = 11;
-    public static final int COL_INDEX_LASTUPD = 12;
+    private static int __COL_INDEX__ = 0;
+    public static final int COL_INDEX_NO = __COL_INDEX__++;
+    public static final int COL_INDEX_ORDER_ID = __COL_INDEX__++;
+    public static final int COL_INDEX_PAIR = __COL_INDEX__++;
+    public static final int COL_INDEX_SIDE = __COL_INDEX__++;
+    public static final int COL_INDEX_AMOUNT = __COL_INDEX__++;
+    public static final int COL_INDEX_PRICE = __COL_INDEX__++;
+    public static final int COL_INDEX_STATUS = __COL_INDEX__++;
+    public static final int COL_INDEX_DIFF = __COL_INDEX__++;
+    public static final int COL_INDEX_PROFIT = __COL_INDEX__++;
+    public static final int COL_INDEX_DATE = __COL_INDEX__++;
+    // public static final int COL_INDEX_IFSELL = __COL_INDEX__++;
+    public static final int COL_INDEX_LOSTCUT = __COL_INDEX__++;
+    public static final int COL_INDEX_TRALINGSTOP = __COL_INDEX__++;
+    public static final int COL_INDEX_LASTUPD = __COL_INDEX__++;
 
     private static final ColumnContext[] COLUMN_ARRAY = { //
-            new ColumnContext("No.", Integer.class, false, 10), //
-            new ColumnContext("OrderId", Long.class, false, 50), //
+            new ColumnContext("No", Integer.class, false, 30), //
+            new ColumnContext("OrderId", Long.class, false, 100), //
             new ColumnContext("Pair", String.class, false, 80), //
-            new ColumnContext("Side", String.class, false, 40), //
-            new ColumnContext("Amount", BigDecimal.class, false, 100), //
+            new ColumnContext("Side", String.class, false, 60), //
+            new ColumnContext("Amount", BigDecimal.class, false, 120), //
             new ColumnContext("Price", BigDecimal.class, false, 100), //
             new ColumnContext("Status", String.class, false, 150), //
             new ColumnContext("Buy-Price", BigDecimal.class, false, 100), //buy
             new ColumnContext("Profit", BigDecimal.class, false, 100), //buy
             new ColumnContext("Date", String.class, false, 120), //
+            // new ColumnContext("IfSell", BigDecimal.class, false, 100), //
             new ColumnContext("LostCut", BigDecimal.class, false, 100), //
             new ColumnContext("TralingStop", BigDecimal.class, false, 100), //
             new ColumnContext("LastUpd", String.class, false, 120), //
@@ -50,10 +53,11 @@ public class RowDataModel extends DefaultTableModel {
         int index = 0;
         for (ColumnContext context : COLUMN_ARRAY) {
             TableColumn tableColumn = tableColumnModel.getColumn(index++);
-            tableColumn.setMinWidth(context.columnWidth);
-            if (index == COL_INDEX_NO) {
+            tableColumn.setMinWidth(10);
+            tableColumn.setPreferredWidth(context.columnWidth);
+            /*if (index == COL_INDEX_NO) {
                 tableColumn.setWidth(context.columnWidth);
-            }
+            }*/
         }
     }
 
@@ -64,9 +68,10 @@ public class RowDataModel extends DefaultTableModel {
         boolean exists = false;
         final BigDecimal amount = this.getAmount(order);
         final BigDecimal price = this.getPrice(order);
-        int rowCount = super.getRowCount();
-        BigDecimal diff = buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP);
-        BigDecimal profit = buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP);
+        final int rowCount = super.getRowCount();
+        final BigDecimal diff = buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP);
+        final BigDecimal profit = buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP);
+        // final BigDecimal ifSell = buy.multiply(amount).divide(buy.subtract(price.subtract(buy)), ROUND, RoundingMode.HALF_UP);
         final String orderDate = DateUtil.me().format2(this.getOrderDate(order));
         for (int index = 0; index < rowCount; index++) {
             Object orderId = super.getValueAt(index, COL_INDEX_ORDER_ID);
@@ -83,6 +88,7 @@ public class RowDataModel extends DefaultTableModel {
                     super.setValueAt(profit, index, COL_INDEX_PROFIT);
                 }
                 super.setValueAt(orderDate, index, COL_INDEX_DATE);
+                // super.setValueAt(ifSell, index, COL_INDEX_IFSELL);
                 super.setValueAt(DateUtil.me().format2(new Date()), index, COL_INDEX_LASTUPD);
                 exists = true;
                 break;
@@ -99,6 +105,7 @@ public class RowDataModel extends DefaultTableModel {
                     canSell(order) ? diff : BigDecimal.ZERO, //
                     canSell(order) ? profit : BigDecimal.ZERO, //
                     orderDate, //
+                    // ifSell, // ifsell
                     BigDecimal.ZERO, // lostcut
                     BigDecimal.ZERO, //
                     DateUtil.me().format2(new Date()) //

@@ -84,7 +84,7 @@ public class BitBankMainFrame extends JPanel {
         ORDER_HISTORY.add(22410923L);
         ORDER_HISTORY.add(22416810L);
         ORDER_HISTORY.add(22425108L);
-        
+
         ORDER_HISTORY.add(22742786L);
         ORDER_HISTORY.add(22921296L);
         ORDER_HISTORY.add(22921279L);
@@ -200,7 +200,7 @@ public class BitBankMainFrame extends JPanel {
             table.setFont(font14);
             table.getTableHeader().setFont(font14);
             table.setRowHeight(tableRowHight);
-
+            table.setRowMargin(1);
             StripeTableRenderer renderer = new StripeTableRenderer();
             table.setDefaultRenderer(String.class, renderer);
             table.setDefaultRenderer(Integer.class, renderer);
@@ -212,6 +212,8 @@ public class BitBankMainFrame extends JPanel {
             model.initColumnSize(table.getColumnModel());
 
             table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+            //列の入れ替えを禁止
+            table.getTableHeader().setReorderingAllowed(false);
             table.setAutoCreateRowSorter(true);
             table.setFillsViewportHeight(true);
             table.setComponentPopupMenu(new TablePopupMenu());
