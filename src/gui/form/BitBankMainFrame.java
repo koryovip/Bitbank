@@ -77,14 +77,20 @@ public class BitBankMainFrame extends JPanel {
 
         ORDER_HISTORY.add(22404556L);
         ORDER_HISTORY.add(22404937L);
-        ORDER_HISTORY.add(22405347L); // cancel
-        ORDER_HISTORY.add(22405944L); // cancel
+        //        ORDER_HISTORY.add(22405347L); // cancel
+        //        ORDER_HISTORY.add(22405944L); // cancel
         ORDER_HISTORY.add(22406015L);
         ORDER_HISTORY.add(22408409L);
         ORDER_HISTORY.add(22410923L);
         ORDER_HISTORY.add(22416810L);
+        ORDER_HISTORY.add(22425108L);
+        
+        ORDER_HISTORY.add(22742786L);
+        ORDER_HISTORY.add(22921296L);
+        ORDER_HISTORY.add(22921279L);
 
-        TS_LIST.add(new TS(22372230L, new BigDecimal(70.0), new BigDecimal(69.5), new BigDecimal(0.5)));
+        //        TS_LIST.add(new TS(22404937L, new BigDecimal(69.1), new BigDecimal(2541.5631), new BigDecimal(69.1), new BigDecimal(1)));
+        //        TS_LIST.add(new TS(22404556L, new BigDecimal(69.1), new BigDecimal(2542), new BigDecimal(69.0), new BigDecimal(1)));
     }
 
     private final RowDataModel model = new RowDataModel();
@@ -360,11 +366,27 @@ public class BitBankMainFrame extends JPanel {
                     buy = ticker.buy;
 
                     if (TS_LIST.size() > 0) {
-                        for (TS ts : TS_LIST) {
+                        for (final TS ts : TS_LIST) {
                             boolean check = ts.check(buy);
-                            model.updRowData2(ts);
+                            model.updRowDataTS(ts);
                             if (check) {
-                                //                                logger.debug(ts.getSellPrice());
+                                new Thread() {
+                                    @Override
+                                    public void run() {
+                                        logger.debug("sell(MARKET):%s at %s", ts.amount, buy);
+                                        //                                        try {
+                                        //                                            Order order = doSellMARKET(Config.me().getPair(), ts.amount);
+                                        //                                            if (order != null && order.orderId != 0) {
+                                        //                                                updateOrderId(order.orderId);
+                                        //                                            } else {
+                                        //                                                JOptionPane.showMessageDialog(me(), "order = null", "Error", JOptionPane.ERROR_MESSAGE);
+                                        //                                            }
+                                        //                                        } catch (BitbankException | IOException e) {
+                                        //                                            e.printStackTrace();
+                                        //                                            JOptionPane.showMessageDialog(me(), e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                                        //                                        }
+                                    }
+                                }.start();
                             }
                         }
                     }
@@ -380,7 +402,7 @@ public class BitBankMainFrame extends JPanel {
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            } , 0, delay, TimeUnit.SECONDS);
+            }, 0, delay, TimeUnit.SECONDS);
         }
         {
             ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
@@ -392,7 +414,7 @@ public class BitBankMainFrame extends JPanel {
                     //                    logger.debug("getActiveOrders");
                     //                    boolean updateXRPBalance = false;
                     for (Order order : orders.orders) {
-                        logger.debug(order);
+                        // logger.debug(order);
                         //                        if (model.addOrUpdRowData(buy, order)) {
                         //                            updateXRPBalance = true;
                         //                        }
@@ -404,7 +426,7 @@ public class BitBankMainFrame extends JPanel {
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            } , 1, delay, TimeUnit.SECONDS);
+            }, 1, delay, TimeUnit.SECONDS);
         }
         {
             ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
@@ -430,7 +452,7 @@ public class BitBankMainFrame extends JPanel {
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            } , 2, delay, TimeUnit.SECONDS);
+            }, 2, delay, TimeUnit.SECONDS);
         }
     }
 

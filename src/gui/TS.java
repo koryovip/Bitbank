@@ -9,12 +9,14 @@ public class TS {
 
     public final long orderId;
     public final BigDecimal bought;
+    public final BigDecimal amount;
     public BigDecimal lostCut;
     public BigDecimal tralingStop;
 
-    public TS(long orderId, BigDecimal bought, BigDecimal lostCut, BigDecimal tralingStop) {
+    public TS(long orderId, BigDecimal bought, BigDecimal amount, BigDecimal lostCut, BigDecimal tralingStop) {
         this.orderId = orderId;
         this.bought = bought;
+        this.amount = amount;
         this.lostCut = lostCut;
         this.tralingStop = tralingStop;
     }

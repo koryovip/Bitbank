@@ -67,6 +67,7 @@ public class RowDataModel extends DefaultTableModel {
         int rowCount = super.getRowCount();
         BigDecimal diff = buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP);
         BigDecimal profit = buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP);
+        final String orderDate = DateUtil.me().format2(this.getOrderDate(order));
         for (int index = 0; index < rowCount; index++) {
             Object orderId = super.getValueAt(index, COL_INDEX_ORDER_ID);
             if (orderId.toString().equals(Long.toString(order.orderId))) {
@@ -81,7 +82,7 @@ public class RowDataModel extends DefaultTableModel {
                     super.setValueAt(diff, index, COL_INDEX_DIFF);
                     super.setValueAt(profit, index, COL_INDEX_PROFIT);
                 }
-                super.setValueAt(DateUtil.me().format2(this.getOrderDate(order)), index, COL_INDEX_DATE);
+                super.setValueAt(orderDate, index, COL_INDEX_DATE);
                 super.setValueAt(DateUtil.me().format2(new Date()), index, COL_INDEX_LASTUPD);
                 exists = true;
                 break;
@@ -97,7 +98,7 @@ public class RowDataModel extends DefaultTableModel {
                     order.status, //
                     canSell(order) ? diff : BigDecimal.ZERO, //
                     canSell(order) ? profit : BigDecimal.ZERO, //
-                    DateUtil.me().format2(this.getOrderDate(order)), //
+                    orderDate, //
                     BigDecimal.ZERO, // lostcut
                     BigDecimal.ZERO, //
                     DateUtil.me().format2(new Date()) //
@@ -109,29 +110,25 @@ public class RowDataModel extends DefaultTableModel {
         return updateBalance;
     }
 
-    synchronized public void updRowData2(TS ts) {
+    synchronized public void updRowDataTS(TS ts) {
         int rowCount = super.getRowCount();
         for (int index = 0; index < rowCount; index++) {
             Object orderId = super.getValueAt(index, COL_INDEX_ORDER_ID);
             if (!orderId.toString().equals(Long.toString(ts.orderId))) {
                 continue;
             }
-            super.setValueAt(ts.lostCut, index, COL_INDEX_LOSTCUT);
-            super.setValueAt(ts.getSellPrice(), index, COL_INDEX_TRALINGSTOP);
+            super.setValueAt(ts.lostCut.setScale(ROUND, RoundingMode.HALF_UP), index, COL_INDEX_LOSTCUT);
+            super.setValueAt(ts.getSellPrice().setScale(ROUND, RoundingMode.HALF_UP), index, COL_INDEX_TRALINGSTOP);
         }
     }
 
     public Date getOrderDate(Order order) {
-        if (order.executedAt != null) {
-            return order.executedAt;
-        }
-        if (order.canceledAt != null) {
+        if ("CANCELED_UNFILLED".equals(order.status) || "CANCELED_PARTIALLY_FILLED".equals(order.status)) {
             return order.canceledAt;
-        }
-        if (order.orderedAt != null) {
+        } else if ("UNFILLED".equals(order.status)) {
             return order.orderedAt;
         }
-        return null;
+        return order.executedAt;
     }
 
     public long getOrderId(int rowIndex) {
@@ -178,17 +175,21 @@ public class RowDataModel extends DefaultTableModel {
     }
 
     /*synchronized*/ public BigDecimal getAmount(Order order) {
-        if (order.remainingAmount.compareTo(BigDecimal.ZERO) > 0) {
-            return order.remainingAmount;
+        if ("UNFILLED".equals(order.status) || "CANCELED_UNFILLED".equals(order.status)) {
+            return order.startAmount;
+        } else if ("FULLY_FILLED".equals(order.status)) {
+            return order.executedAmount;
         }
-        return order.executedAmount;
+        return order.remainingAmount;
     }
 
     /*synchronized*/ public BigDecimal getPrice(Order order) {
-        if (order.averagePrice.compareTo(BigDecimal.ZERO) > 0) {
-            return order.averagePrice;
-        }
-        return order.price;
+        if ("UNFILLED".equals(order.status) || "CANCELED_UNFILLED".equals(order.status)) {
+            return order.price;
+        } /*else if ("FULLY_FILLED".equals(order.status)) {
+            return order.executedAmount;
+          }*/
+        return order.averagePrice;
     }
 
     final public boolean isBuy(int row) {
