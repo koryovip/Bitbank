@@ -56,38 +56,10 @@ public class BitBankMainFrame extends JPanel {
     private static final List<TS> TS_LIST = new ArrayList<TS>();
 
     static {
-        //        ORDER_HISTORY.add(21631360L);
-        //        ORDER_HISTORY.add(21631793L);
-        //        ORDER_HISTORY.add(21633650L);
-        //        ORDER_HISTORY.add(21638696L);
-        //        ORDER_HISTORY.add(21675036L);
-        //        ORDER_HISTORY.add(21683589L);
-        //        ORDER_HISTORY.add(21684658L);
-        //        ORDER_HISTORY.add(21687237L);
-        //        ORDER_HISTORY.add(21725789L);
-        //        ORDER_HISTORY.add(21791026L);
-        // ORDER_HISTORY.add(21789874L);
-        //        ORDER_HISTORY.add(368628374L);
-        //        ORDER_HISTORY.add(368693910L);
-        //        ORDER_HISTORY.add(369380357L);
-        //        ORDER_HISTORY.add(369388108L);
-        //ORDER_HISTORY.add(22369133L);
-        //ORDER_HISTORY.add(22371013L);
-        //ORDER_HISTORY.add(22372230L);
-
-        ORDER_HISTORY.add(22404556L);
-        ORDER_HISTORY.add(22404937L);
-        //        ORDER_HISTORY.add(22405347L); // cancel
-        //        ORDER_HISTORY.add(22405944L); // cancel
-        ORDER_HISTORY.add(22406015L);
-        ORDER_HISTORY.add(22408409L);
-        ORDER_HISTORY.add(22410923L);
-        ORDER_HISTORY.add(22416810L);
-        ORDER_HISTORY.add(22425108L);
-
-        ORDER_HISTORY.add(22742786L);
-        ORDER_HISTORY.add(22921296L);
-        ORDER_HISTORY.add(22921279L);
+        ORDER_HISTORY.add(23963214L);
+        ORDER_HISTORY.add(23973945L);
+        ORDER_HISTORY.add(23974502L);
+        ORDER_HISTORY.add(23961456L);
 
         //        TS_LIST.add(new TS(22404937L, new BigDecimal(69.1), new BigDecimal(2541.5631), new BigDecimal(69.1), new BigDecimal(1)));
         //        TS_LIST.add(new TS(22404556L, new BigDecimal(69.1), new BigDecimal(2542), new BigDecimal(69.0), new BigDecimal(1)));
@@ -404,7 +376,7 @@ public class BitBankMainFrame extends JPanel {
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            }, 0, delay, TimeUnit.SECONDS);
+            } , 0, delay, TimeUnit.SECONDS);
         }
         {
             ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
@@ -428,7 +400,7 @@ public class BitBankMainFrame extends JPanel {
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            }, 1, delay, TimeUnit.SECONDS);
+            } , 1, delay, TimeUnit.SECONDS);
         }
         {
             ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
@@ -454,7 +426,7 @@ public class BitBankMainFrame extends JPanel {
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            }, 2, delay, TimeUnit.SECONDS);
+            } , 2, delay, TimeUnit.SECONDS);
         }
     }
 

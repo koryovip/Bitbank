@@ -41,6 +41,8 @@ public class TablePopupMenu extends JPopupMenu {
             }
             String msg = "Profit:" + sellTotal.subtract(buyTotal).setScale(Config.me().getRound1(), RoundingMode.HALF_UP).toPlainString();
             msg += "\r\n";
+            msg += "Amount:" + buyTotalExecutedAmount/*.setScale(Config.me().getRound1(), RoundingMode.HALF_UP)*/.toPlainString();
+            msg += "\r\n";
             msg += "AveragePrice:" + buyTotal.divide(buyTotalExecutedAmount, Config.me().getRound1(), RoundingMode.HALF_UP).toPlainString();
             JOptionPane.showMessageDialog(BitBankMainFrame.me(), //
                     msg, //
