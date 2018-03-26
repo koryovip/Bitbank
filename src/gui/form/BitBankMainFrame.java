@@ -56,10 +56,12 @@ public class BitBankMainFrame extends JPanel {
     private static final List<TS> TS_LIST = new ArrayList<TS>();
 
     static {
+        ORDER_HISTORY.add(23962633L);
         ORDER_HISTORY.add(23963214L);
         ORDER_HISTORY.add(23973945L);
         ORDER_HISTORY.add(23974502L);
         ORDER_HISTORY.add(23961456L);
+        ORDER_HISTORY.add(24937100L);
 
         //        TS_LIST.add(new TS(22404937L, new BigDecimal(69.1), new BigDecimal(2541.5631), new BigDecimal(69.1), new BigDecimal(1)));
         //        TS_LIST.add(new TS(22404556L, new BigDecimal(69.1), new BigDecimal(2542), new BigDecimal(69.0), new BigDecimal(1)));
