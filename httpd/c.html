@@ -16,6 +16,52 @@ body {padding: 0; margin: 0;}
 </div>
 <script src="./js/pubnub.4.20.2.min.js"></script>
 <script>
+/*var canvasPrototype = window.CanvasRenderingContext2D && CanvasRenderingContext2D.prototype;
+canvasPrototype.dottedLine = function(x1, y1, x2, y2, interval) {
+    if (!interval) {
+        interval = 5;
+    }
+    var isHorizontal = true;
+    if (x1 == x2) {
+        isHorizontal = false;
+    }
+    var len = isHorizontal ? x2 - x1 : y2 - y1;
+    this.moveTo(x1, y1);
+    var progress = 0;
+    while (len > progress) {
+        progress += interval;
+        if (progress > len) {
+            progress = len;
+        }
+        if (isHorizontal) {
+            this.moveTo(x1 + progress, y1);
+            this.arc(x1 + progress, y1, 1, 0, Math.PI * 2, true);
+            this.fill();
+        } else {
+            this.moveTo(x1, y1 + progress);
+            this.arc(x1, y1 + progress, 1, 0, Math.PI * 2, true);
+            this.fill();
+        }
+    }
+};*/
+function drawDashLine(ctx, x1, y1, x2, y2, dashLength) {
+    var dashLen = dashLength === undefined ? 5 : dashLength,
+    xpos = x2 - x1, //得到横向的宽度;
+    ypos = y2 - y1, //得到纵向的高度;
+    numDashes = Math.floor(Math.sqrt(xpos * xpos + ypos * ypos) / dashLen);
+    //利用正切获取斜边的长度除以虚线长度，得到要分为多少段;
+    ctx.beginPath();
+    for(var i = 0; i < numDashes; i++) {
+        if(i % 2 === 0) {
+            ctx.moveTo(x1 + (xpos/numDashes) * i, y1 + (ypos/numDashes) * i); 
+            //有了横向宽度和多少段，得出每一段是多长，起点 + 每段长度 * i = 要绘制的起点；
+        } else {
+            ctx.lineTo(x1 + (xpos/numDashes) * i, y1 + (ypos/numDashes) * i);
+        }
+    }
+    ctx.stroke();
+    ctx.closePath();
+}
 function publish() {
     pubnub = new PubNub({
         //publishKey : 'demo',
@@ -78,7 +124,7 @@ async function getData() {
 }
 var pairConfig = { /* scale : 100 */ };
 var config = {
-    candlestick : {width : 5}
+    candlestick : {width : 7}
 };
 getData().then(result => {
     // console.log(result.data.candlestick[0].ohlcv);
@@ -88,8 +134,8 @@ getData().then(result => {
 	var canvas = document.getElementById("chart");
 	var context = canvas.getContext("2d");
 	context.font = "11px Meiryo";
-	var maxReal = 70;
-	var minReal = 64;
+	var maxReal = 64;
+	var minReal = 62;
 	var range = maxReal - minReal;
 	var chartHeight = 800; // chart height
 	var step = range / chartHeight;
@@ -192,13 +238,17 @@ getData().then(result => {
 	    	// console.log(e);
 		    var x = e.clientX - offsetX;
 		    var y = e.clientY - offsetY;
-		    context.fillStyle = "rgb(255,0,0)";
 	    	context.clearRect(0, 0, w, h);
-	    	context.fillRect(0, y, 1400, 0.5); // H line
+		    //context.fillStyle = "rgb(255,0,0)";
+	    	//context.fillRect(0, y, 1400, 0.5); // H line
+	    	context.strokeStyle = '#fff';
+	    	context.lineWidth = 0.5;
+	    	drawDashLine(context, 0, y, 1400, y, 2);
 	    	
 	        var xx = (config.candlestick.width+2) * Math.floor(x / (config.candlestick.width+2))+(Math.floor(config.candlestick.width/2))+1;
 	    	//console.log(xx/11);
-	    	context.fillRect(xx, 0, 0.5, 800);  // V line
+	    	//context.fillRect(xx, 0, 0.5, 800);  // V line
+	    	drawDashLine(context, xx, 0, xx, 800, 2);
 	    	// price
 	    	{
 		    	var priceText = (maxReal-y*step).toFixed(3);
