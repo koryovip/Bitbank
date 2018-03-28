@@ -18,7 +18,7 @@ body {padding: 0; margin: 0;}
 <script src="./js/pubnub.4.20.2.min.js"></script>
 <script>
 const SCREEN_WIDTH = 1800;
-const SCREEN_HEIGHT = 500;
+const SCREEN_HEIGHT = 600;
 var init = function(id) {
 	var canvas = document.getElementById(id);
 	var ctx = canvas.getContext('2d');
@@ -32,9 +32,11 @@ var init = function(id) {
 	// キャンバスの表示自体が大きくならないように、CSSで元のサイズを設定しておく
 	canvas.style.width = SCREEN_WIDTH + 'px';
 	canvas.style.height = SCREEN_HEIGHT + 'px';
-	
+
 	// 描画時のスケールも設定しておく
 	ctx.scale(dpr, dpr);
+	// フォントセット
+	ctx.font = "10px Meiryo";
 };
 init('chart');
 init('layer');
@@ -171,7 +173,6 @@ getData().then(result => {
     // console.log(data);
 	var canvas = document.getElementById("chart");
 	var context = canvas.getContext("2d");
-	context.font = "11px Meiryo";
 	var maxReal = 62;
 	var minReal = 58;
 	var range = maxReal - minReal;
@@ -191,8 +192,9 @@ getData().then(result => {
 		var count = 20;
 		for (var ii = 0; ii <= count; ii++) {
 			var y = ii*(chartHeight/count);
-			context.fillStyle = "rgb(80,80,80)";
-		    context.fillRect(0, y, 1400, 0.5); // x, y, width, height // grid line
+			//context.fillStyle = "rgb(80,80,80)";
+		    //context.fillRect(0, y, 1400, 0.5); // x, y, width, height // grid line
+		    drawDashLineH(context, 0, 1400, y, 2, 1, 'rgb(60,60,60)');
 		    context.fillStyle = "rgb(255,255,255)";
 	        context.textBaseline = "middle";
 		    context.fillText((maxReal-y*step).toFixed(3), 1300, y); // fillText(text, x, y [, maxWidth])
