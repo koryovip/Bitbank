@@ -152,9 +152,9 @@ function publish() {
 // [始値, 高値, 安値, 終値]
 async function getData() {
     // var d = await (await fetch('https://public.bitbank.cc/xrp_jpy/candlestick/15min/20180322')).text();
-    const today = formatDt2(new Date());
+    const today = new Date().getFullYear();
     console.log(today);
-    const res = await fetch('https://public.bitbank.cc/xrp_jpy/candlestick/5min/'+today);
+    const res = await fetch('https://public.bitbank.cc/xrp_jpy/candlestick/12hour/'+today);
     if (res.status != 200) {
         throw new Error('リソースを読み込めませんでした');
     }
@@ -168,15 +168,31 @@ var config = {
 };
 getData().then(result => {
     // console.log(result.data.candlestick[0].ohlcv);
-    var data = result.data.candlestick[0].ohlcv;
-    data = data.slice(-200);
-    // console.log(data);
 	var canvas = document.getElementById("chart");
 	var context = canvas.getContext("2d");
-	var maxReal = 62;
-	var minReal = 58;
+    var data = result.data.candlestick[0].ohlcv;
+    data = data.slice(-100);
+    // console.log(data);
+	var maxReal = 0;
+	var minReal = 9999999;
+	for (var ii = 0; ii < data.length; ii++) {
+		var open = +data[ii][0], high = +data[ii][1], low = +data[ii][2], close = +data[ii][3];
+		if (high > maxReal) {
+            maxReal = high;
+        }
+		if (low < minReal) {
+			minReal = low;
+        }
+	}
+	console.log(minReal, maxReal);
+	maxReal = Math.ceil(maxReal+maxReal*0.05);
+	minReal = Math.floor(minReal-minReal*0.05);
+	if (maxReal === minReal) {
+		minReal = minReal - 1;
+	}
+	console.log(minReal, maxReal);
 	var range = maxReal - minReal;
-	var chartHeight = 800; // chart height
+	var chartHeight = SCREEN_HEIGHT; // chart height
 	var step = range / chartHeight;
 	console.log('step:'+step);
 	// var max = maxReal * pairConfig.scale;
@@ -205,7 +221,7 @@ getData().then(result => {
 	var minScreen = {index: 0, value:9999999999999};
 	var nowScreen = {index: 0, value:0};
 	for (var ii = 0; ii < data.length; ii++) {
-		var open = data[ii][0], high = data[ii][1], low = data[ii][2], close = data[ii][3];
+		var open = +data[ii][0], high = +data[ii][1], low = +data[ii][2], close = +data[ii][3];
 		if (high > maxScreen.value) {
 			maxScreen.index = ii;
             maxScreen.value = high;

@@ -18,6 +18,9 @@ var padding = function(n, d, p) {
 var formatDt = function(date) {
     return $format('{0}/{1} {2}:{3}', padding(date.getMonth()+1,2), padding(date.getDate(),2), padding(date.getHours(),2), padding(date.getMinutes(),2));
 };
-var formatDt2 = function(date) {
+var formatDtYYYYMMDD = function(date) {
     return $format('{0}{1}{2}', date.getFullYear(), padding(date.getMonth()+1,2), padding(date.getDate(),2));
+};
+var formatDtYYYYMM = function(date) {
+    return $format('{0}{1}', date.getFullYear(), padding(date.getMonth()+1,2));
 };
