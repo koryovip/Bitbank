@@ -6,16 +6,38 @@ body {padding: 0; margin: 0;}
 	border: 0;
 	padding: 0;
 	margin: 0;
-	background-color: #222;
+	background-color: rgb(32,36,47);
 }
 </style>
 <body>
 <div style="position: relative; margin: 1px; padding: 0;">
-    <canvas id="layer" width="1800" height="800" style="position: absolute; left: 0; top: 0; padding: 0; margin: 0; z-index: 1;"></canvas>
-    <canvas id="chart" width="1800" height="800" style="position: absolute; left: 0; top: 0; padding: 0; margin: 0; z-index: 0;"></canvas>
+    <canvas id="layer" style="position: absolute; left: 0; top: 0; padding: 0; margin: 0; z-index: 1;"></canvas>
+    <canvas id="chart" style="position: absolute; left: 0; top: 0; padding: 0; margin: 0; z-index: 0;"></canvas>
 </div>
+<script src="./js/common.js"></script>
 <script src="./js/pubnub.4.20.2.min.js"></script>
 <script>
+const SCREEN_WIDTH = 1800;
+const SCREEN_HEIGHT = 500;
+var init = function(id) {
+	var canvas = document.getElementById(id);
+	var ctx = canvas.getContext('2d');
+	// デバイスのピクセル比を取得する
+	var dpr = window.devicePixelRatio || 1;
+	console.log('dpr:'+dpr);
+	// 取得した値をキャンバスの幅と高さに掛ける
+	canvas.width = SCREEN_WIDTH * dpr;
+	canvas.height = SCREEN_HEIGHT * dpr;
+
+	// キャンバスの表示自体が大きくならないように、CSSで元のサイズを設定しておく
+	canvas.style.width = SCREEN_WIDTH + 'px';
+	canvas.style.height = SCREEN_HEIGHT + 'px';
+	
+	// 描画時のスケールも設定しておく
+	ctx.scale(dpr, dpr);
+};
+init('chart');
+init('layer');
 /*var canvasPrototype = window.CanvasRenderingContext2D && CanvasRenderingContext2D.prototype;
 canvasPrototype.dottedLine = function(x1, y1, x2, y2, interval) {
     if (!interval) {
@@ -44,19 +66,33 @@ canvasPrototype.dottedLine = function(x1, y1, x2, y2, interval) {
         }
     }
 };*/
-function drawDashLine(ctx, x1, y1, x2, y2, dashLength) {
+function drawDashLineH(ctx, x1, x2, y, dashLength, lineWidth, strokeStyle) {
+	drawDashLine(ctx, x1, y, x2, y, dashLength, lineWidth, strokeStyle);
+}
+function drawDashLineV(ctx, y1, y2, x, dashLength, lineWidth, strokeStyle) {
+	drawDashLine(ctx, x, y1, x, y2, dashLength, lineWidth, strokeStyle);
+}
+function drawDashLine(ctx, x1, y1, x2, y2, dashLength, lineWidth, strokeStyle) {
     var dashLen = dashLength === undefined ? 5 : dashLength,
+    lineWidth = lineWidth === undefined ? 1 : lineWidth,
+    strokeStyle = strokeStyle === undefined ? '#000' : strokeStyle,
     xpos = x2 - x1, //得到横向的宽度;
     ypos = y2 - y1, //得到纵向的高度;
-    numDashes = Math.floor(Math.sqrt(xpos * xpos + ypos * ypos) / dashLen);
+    numDashes = Math.floor(Math.sqrt(xpos * xpos + ypos * ypos) / dashLen),
+    h = y1 === y2 ? 0.5 : 0.5,
+    v = x1 === x2 ? 0 : 0;
     //利用正切获取斜边的长度除以虚线长度，得到要分为多少段;
     ctx.beginPath();
+    ctx.strokeStyle = strokeStyle;
+    ctx.lineWidth = lineWidth;
     for(var i = 0; i < numDashes; i++) {
         if(i % 2 === 0) {
-            ctx.moveTo(x1 + (xpos/numDashes) * i, y1 + (ypos/numDashes) * i); 
+        	// ブラウザ上のSVGとCanvasで1pxの線がぼやける訳
+        	// http://folioscope.hatenablog.jp/entry/2014/09/03/211137
+            ctx.moveTo(v + x1 + (xpos/numDashes) * i, h + y1 + (ypos/numDashes) * i);
             //有了横向宽度和多少段，得出每一段是多长，起点 + 每段长度 * i = 要绘制的起点；
         } else {
-            ctx.lineTo(x1 + (xpos/numDashes) * i, y1 + (ypos/numDashes) * i);
+            ctx.lineTo(v + x1 + (xpos/numDashes) * i, h + y1 + (ypos/numDashes) * i);
         }
     }
     ctx.stroke();
@@ -114,7 +150,9 @@ function publish() {
 // [始値, 高値, 安値, 終値]
 async function getData() {
     // var d = await (await fetch('https://public.bitbank.cc/xrp_jpy/candlestick/15min/20180322')).text();
-    const res = await fetch('https://public.bitbank.cc/xrp_jpy/candlestick/1min/20180327');
+    const today = formatDt2(new Date());
+    console.log(today);
+    const res = await fetch('https://public.bitbank.cc/xrp_jpy/candlestick/5min/'+today);
     if (res.status != 200) {
         throw new Error('リソースを読み込めませんでした');
     }
@@ -134,25 +172,25 @@ getData().then(result => {
 	var canvas = document.getElementById("chart");
 	var context = canvas.getContext("2d");
 	context.font = "11px Meiryo";
-	var maxReal = 64;
-	var minReal = 62;
+	var maxReal = 62;
+	var minReal = 58;
 	var range = maxReal - minReal;
 	var chartHeight = 800; // chart height
 	var step = range / chartHeight;
 	console.log('step:'+step);
 	// var max = maxReal * pairConfig.scale;
 	{
+		/*context.strokeStyle = "rgb(255,255,255)";
+		context.beginPath();
+		context.lineWidth = 0.5;
+		//context.setLineDash([4, 4]);
+		context.moveTo(0, 100.5);
+		context.lineTo(1400, 100.5);
+		context.stroke();*/
 		// x軸を描く
 		var count = 20;
 		for (var ii = 0; ii <= count; ii++) {
 			var y = ii*(chartHeight/count);
-			/*context.strokeStyle = "rgb(100,100,100)";
-			context.beginPath();
-			context.lineWidth = 0.1;
-			context.setLineDash([2, 2]);
-			context.moveTo(0, y);
-			context.lineTo(1400, y);
-			context.stroke();*/
 			context.fillStyle = "rgb(80,80,80)";
 		    context.fillRect(0, y, 1400, 0.5); // x, y, width, height // grid line
 		    context.fillStyle = "rgb(255,255,255)";
@@ -175,9 +213,9 @@ getData().then(result => {
 			minScreen.value = low;
         }
 		if (open > close) {
-			context.fillStyle = "rgb(255,0,0)";
+			context.fillStyle = "rgb(219,86,76)";
 		} else {
-			context.fillStyle = "rgb(0,255,0)";
+			context.fillStyle = "rgb(0,148,135)";
 		}
 		{
 			var height = Math.abs(open - close) / step;
@@ -199,31 +237,17 @@ getData().then(result => {
 		}
 	}
 	console.log(nowScreen.value);
-	context.fillStyle = "rgb(255,255,0)";
-	context.fillRect(0, (maxReal-maxScreen.value)/step, 1400, 0.5);
-	context.fillRect(0, (maxReal-minScreen.value)/step, 1400, 0.5);
-	context.fillStyle = "rgb(0,255,255)";
-	context.fillRect(0, (maxReal-nowScreen.value)/step, 1400, 0.5);
-	/**
-	 * フォーマット関数
-	 */
-	var $format = function(fmt, a) {
-	    var rep_fn = undefined;
-	    if (typeof a == "object") {
-	        rep_fn = function(m, k) { return a[ k ]; }
-	    } else {
-	        var args = arguments;
-	        rep_fn = function(m, k) { return args[ parseInt(k)+1 ]; }
-	    }
-	    return fmt.replace( /\{(\w+)\}/g, rep_fn);
-	};
-	var padding = function(n, d, p) {
-	    p = p || '0';
-	    return (p.repeat(d) + n).slice(-d);
-	};
-	var formatDt = function(date) {
-		return $format('{0}/{1} {2}:{3}', padding(date.getMonth()+1,2), padding(date.getDate(),2), padding(date.getHours(),2), padding(date.getMinutes(),2));
-	};
+	//context.fillStyle = "rgb(255,255,0)";
+	//context.fillRect(0, (maxReal-maxScreen.value)/step, 1400, 0.5);
+	//context.fillRect(0, (maxReal-minScreen.value)/step, 1400, 0.5);
+    drawDashLineH(context, 0, 1400, Math.round((maxReal-maxScreen.value)/step), 2, 0.5, 'rgb(255,255,0)');
+    drawDashLineH(context, 0, 1400, Math.round((maxReal-minScreen.value)/step), 2, 0.5, 'rgb(255,255,0)');
+	//context.fillStyle = "rgb(0,255,255)";
+	//context.fillRect(0, (maxReal-nowScreen.value)/step, 1400, 0.5);
+	var yNow = Math.round((maxReal-nowScreen.value)/step);
+	console.log(yNow);
+	drawDashLineH(context, 0, 1400, yNow, 2, 1, '#f00');
+
 	/*
 	 * マウスカーソルの動きに追従する
 	 */
@@ -243,12 +267,12 @@ getData().then(result => {
 	    	//context.fillRect(0, y, 1400, 0.5); // H line
 	    	context.strokeStyle = '#fff';
 	    	context.lineWidth = 0.5;
-	    	drawDashLine(context, 0, y, 1400, y, 2);
-	    	
-	        var xx = (config.candlestick.width+2) * Math.floor(x / (config.candlestick.width+2))+(Math.floor(config.candlestick.width/2))+1;
+	    	drawDashLineH(context, 0, 1400, y, 3, 0.5, '#fff');
+
+	        var xx = (config.candlestick.width+2) * Math.floor(x / (config.candlestick.width+2))+(Math.floor(config.candlestick.width/2))+1.5;
 	    	//console.log(xx/11);
 	    	//context.fillRect(xx, 0, 0.5, 800);  // V line
-	    	drawDashLine(context, xx, 0, xx, 800, 2);
+	    	drawDashLineV(context, 0, 800, xx, 3, 0.5, '#fff');
 	    	// price
 	    	{
 		    	var priceText = (maxReal-y*step).toFixed(3);
