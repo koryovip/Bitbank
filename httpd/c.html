@@ -18,7 +18,10 @@ body {padding: 0; margin: 0;}
 <script src="./js/pubnub.4.20.2.min.js"></script>
 <script>
 const SCREEN_WIDTH = 1800;
+const AAAAAAAAAAAA = SCREEN_WIDTH - 60;
+const BBBBBBBBBBBB = SCREEN_WIDTH - 80;
 const SCREEN_HEIGHT = 600;
+const MAX_DAYS = 24*9;
 var init = function(id) {
 	var canvas = document.getElementById(id);
 	var ctx = canvas.getContext('2d');
@@ -150,28 +153,42 @@ function publish() {
 };
 //publish();
 // [始値, 高値, 安値, 終値]
-async function getData() {
-    // var d = await (await fetch('https://public.bitbank.cc/xrp_jpy/candlestick/15min/20180322')).text();
-    const today = new Date().getFullYear();
-    console.log(today);
-    const res = await fetch('https://public.bitbank.cc/xrp_jpy/candlestick/12hour/'+today);
-    if (res.status != 200) {
-        throw new Error('リソースを読み込めませんでした');
-    }
-    return await res.json().catch(() => {
-        throw new Error('JSONの形式が正しくありません');
-    });
+async function getData(count) {
+    var result = [];
+	// var d = await (await fetch('https://public.bitbank.cc/xrp_jpy/candlestick/15min/20180322')).text();
+	var days = 0;
+	while (result.length <= count) {
+	    console.log(result.length);
+		var now = new Date();
+	    now.setDate(now.getDate() - days);
+	    var today = formatDtYYYYMMDD(now);
+	    console.log(today);
+	    var res = await fetch('https://public.bitbank.cc/xrp_jpy/candlestick/1hour/'+today);
+	    if (res.status != 200) {
+	        throw new Error('リソースを読み込めませんでした');
+	    }
+	    var resNow = await res.json().catch(() => {
+	        throw new Error('JSONの形式が正しくありません');
+	    });
+	    for (var row of resNow.data.candlestick[0].ohlcv.reverse()) {
+	    	   result.unshift(row);
+	    }
+	    days++;
+	}
+	// console.log(result);
+    return result;
 }
 var pairConfig = { /* scale : 100 */ };
 var config = {
-    candlestick : {width : 7}
+    candlestick : {width : 5}
 };
-getData().then(result => {
+getData(MAX_DAYS).then(data => {
+	// console.log(data);
     // console.log(result.data.candlestick[0].ohlcv);
 	var canvas = document.getElementById("chart");
 	var context = canvas.getContext("2d");
-    var data = result.data.candlestick[0].ohlcv;
-    data = data.slice(-100);
+    //var data = result.data.candlestick[0].ohlcv;
+    //data = data.slice(-100);
     // console.log(data);
 	var maxReal = 0;
 	var minReal = 9999999;
@@ -202,18 +219,18 @@ getData().then(result => {
 		context.lineWidth = 0.5;
 		//context.setLineDash([4, 4]);
 		context.moveTo(0, 100.5);
-		context.lineTo(1400, 100.5);
+		context.lineTo(BBBBBBBBBBBB, 100.5);
 		context.stroke();*/
 		// x軸を描く
 		var count = 20;
 		for (var ii = 0; ii <= count; ii++) {
 			var y = ii*(chartHeight/count);
 			//context.fillStyle = "rgb(80,80,80)";
-		    //context.fillRect(0, y, 1400, 0.5); // x, y, width, height // grid line
-		    drawDashLineH(context, 0, 1400, y, 2, 1, 'rgb(60,60,60)');
+		    //context.fillRect(0, y, BBBBBBBBBBBB, 0.5); // x, y, width, height // grid line
+		    drawDashLineH(context, 0, BBBBBBBBBBBB, y, 2, 1, 'rgb(60,60,60)');
 		    context.fillStyle = "rgb(255,255,255)";
 	        context.textBaseline = "middle";
-		    context.fillText((maxReal-y*step).toFixed(3), 1300, y); // fillText(text, x, y [, maxWidth])
+		    context.fillText((maxReal-y*step).toFixed(3), AAAAAAAAAAAA, y); // fillText(text, x, y [, maxWidth])
 		}
 	}
 	//var VArray = [];
@@ -256,15 +273,15 @@ getData().then(result => {
 	}
 	console.log(nowScreen.value);
 	//context.fillStyle = "rgb(255,255,0)";
-	//context.fillRect(0, (maxReal-maxScreen.value)/step, 1400, 0.5);
-	//context.fillRect(0, (maxReal-minScreen.value)/step, 1400, 0.5);
-    drawDashLineH(context, 0, 1400, Math.round((maxReal-maxScreen.value)/step), 2, 0.5, 'rgb(255,255,0)');
-    drawDashLineH(context, 0, 1400, Math.round((maxReal-minScreen.value)/step), 2, 0.5, 'rgb(255,255,0)');
+	//context.fillRect(0, (maxReal-maxScreen.value)/step, BBBBBBBBBBBB, 0.5);
+	//context.fillRect(0, (maxReal-minScreen.value)/step, BBBBBBBBBBBB, 0.5);
+    drawDashLineH(context, 0, BBBBBBBBBBBB, Math.round((maxReal-maxScreen.value)/step), 2, 0.5, 'rgb(255,255,0)');
+    drawDashLineH(context, 0, BBBBBBBBBBBB, Math.round((maxReal-minScreen.value)/step), 2, 0.5, 'rgb(255,255,0)');
 	//context.fillStyle = "rgb(0,255,255)";
-	//context.fillRect(0, (maxReal-nowScreen.value)/step, 1400, 0.5);
+	//context.fillRect(0, (maxReal-nowScreen.value)/step, BBBBBBBBBBBB, 0.5);
 	var yNow = Math.round((maxReal-nowScreen.value)/step);
 	console.log(yNow);
-	drawDashLineH(context, 0, 1400, yNow, 2, 1, '#f00');
+	drawDashLineH(context, 0, BBBBBBBBBBBB, yNow, 2, 1, '#f00');
 
 	/*
 	 * マウスカーソルの動きに追従する
@@ -282,13 +299,13 @@ getData().then(result => {
 		    var y = e.clientY - offsetY;
 	    	context.clearRect(0, 0, w, h);
 		    //context.fillStyle = "rgb(255,0,0)";
-	    	//context.fillRect(0, y, 1400, 0.5); // H line
+	    	//context.fillRect(0, y, BBBBBBBBBBBB, 0.5); // H line
 	    	context.strokeStyle = '#fff';
 	    	context.lineWidth = 0.5;
-	    	drawDashLineH(context, 0, 1400, y, 3, 0.5, '#fff');
+	    	drawDashLineH(context, 0, BBBBBBBBBBBB, y, 3, 0.5, '#fff');
 
 	        var xx = (config.candlestick.width+2) * Math.floor(x / (config.candlestick.width+2))+(Math.floor(config.candlestick.width/2))+1.5;
-	    	//console.log(xx/11);
+	    	//console.log(xx,xx/(config.candlestick.width+2));
 	    	//context.fillRect(xx, 0, 0.5, 800);  // V line
 	    	drawDashLineV(context, 0, 800, xx, 3, 0.5, '#fff');
 	    	// price
@@ -297,14 +314,15 @@ getData().then(result => {
 		    	// measureText() を使って、文字列にアンダーラインや背景ボックスをつける
 		    	var txw1 = context.measureText(priceText);
 		    	context.fillStyle = "rgb(125,125,125)";
-		    	context.fillRect(1300, y-6, txw1.width, 11); // 11=font size
+		    	context.fillRect(AAAAAAAAAAAA, y-6, txw1.width, 11); // 11=font size
 		    	context.fillStyle = "rgb(255,255,255)";
 		    	context.textBaseline = "middle";
-		    	context.fillText(priceText, 1300, y); // fillText(text, x, y [, maxWidth])
+		    	context.fillText(priceText, AAAAAAAAAAAA, y); // fillText(text, x, y [, maxWidth])
 	    	}
 	    	// date
 	    	{
-	    	   var idx = Math.floor(xx/11);
+	    	   var idx = Math.floor(xx/(config.candlestick.width+2));
+	    	   //console.log(idx);
 	    	   context.textBaseline = "bottom";
 	    	   context.fillText(formatDt(new Date(data[idx][5])), xx, chartHeight); // fillText(text, x, y [, maxWidth])
 	    	}
