@@ -158,7 +158,7 @@ async function getData(count) {
 	// var d = await (await fetch('https://public.bitbank.cc/xrp_jpy/candlestick/15min/20180322')).text();
 	var days = 0;
 	while (result.length <= count) {
-	    console.log(result.length);
+	    //console.log(result.length);
 		var now = new Date();
 	    now.setDate(now.getDate() - days);
 	    var today = formatDtYYYYMMDD(now);
@@ -190,6 +190,31 @@ getData(MAX_DAYS).then(data => {
     //var data = result.data.candlestick[0].ohlcv;
     //data = data.slice(-100);
     // console.log(data);
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
+    /*var maxReal = 0;
+    var minReal = 9999999;
+    var xxx1 = 0, yyy1 = 0, xxx2 = 0; yyy2 = 0;*/
+    for (var ii = 0; ii < data.length; ii++) {
+    	var open = +data[ii][0], high = +data[ii][1], low = +data[ii][2], close = +data[ii][3], date = new Date(data[ii][5]);
+        if (high > maxReal) {
+            maxReal = high;
+        }
+        if (low < minReal) {
+            minReal = low;
+        }
+    	if (date.getHours() === 0 && date.getMinutes() === 0) {
+    		// console.log(date);
+    		drawDashLineV(context, 0, SCREEN_HEIGHT, ii*(config.candlestick.width+2)+3.5, 3, 0.5, 'rgb(60,60,60)');
+    		/*
+    		var xx = ii*(config.candlestick.width+2)+3.5;
+    		context.fillStyle = "rgb(219,86,76)";
+    		context.strokeRect(200,80,100,50);
+    		maxReal = 0;
+    		minReal = 9999999;
+    		*/
+    	}
+    }
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////
 	var maxReal = 0;
 	var minReal = 9999999;
 	for (var ii = 0; ii < data.length; ii++) {
@@ -302,12 +327,12 @@ getData(MAX_DAYS).then(data => {
 	    	//context.fillRect(0, y, BBBBBBBBBBBB, 0.5); // H line
 	    	context.strokeStyle = '#fff';
 	    	context.lineWidth = 0.5;
-	    	drawDashLineH(context, 0, BBBBBBBBBBBB, y, 3, 0.5, '#fff');
+	    	drawDashLineH(context, 0, BBBBBBBBBBBB, y, 3, 0.5, '#fff'); // mouse h line
 
 	        var xx = (config.candlestick.width+2) * Math.floor(x / (config.candlestick.width+2))+(Math.floor(config.candlestick.width/2))+1.5;
 	    	//console.log(xx,xx/(config.candlestick.width+2));
 	    	//context.fillRect(xx, 0, 0.5, 800);  // V line
-	    	drawDashLineV(context, 0, 800, xx, 3, 0.5, '#fff');
+	    	drawDashLineV(context, 0, 800, xx, 3, 0.5, '#fff'); // mouse v line
 	    	// price
 	    	{
 		    	var priceText = (maxReal-y*step).toFixed(3);
@@ -324,7 +349,7 @@ getData(MAX_DAYS).then(data => {
 	    	   var idx = Math.floor(xx/(config.candlestick.width+2));
 	    	   //console.log(idx);
 	    	   context.textBaseline = "bottom";
-	    	   context.fillText(formatDt(new Date(data[idx][5])), xx, chartHeight); // fillText(text, x, y [, maxWidth])
+	    	   context.fillText(formatDt(new Date(data[idx][5])), xx+3, chartHeight); // fillText(text, x, y [, maxWidth])
 	    	}
 	    	// label
 	        {
