@@ -182,6 +182,14 @@ var pairConfig = { /* scale : 100 */ };
 var config = {
     candlestick : {width : 5}
 };
+var xFromI = function(ii) {
+    var x = (config.candlestick.width+2)*ii+1+(Math.floor(config.candlestick.width/2));
+    return x;
+};
+var xFromX = function(x) {
+    var xx = (config.candlestick.width+2) * Math.floor(x / (config.candlestick.width+2))+(Math.floor(config.candlestick.width/2))+1.5;
+    return xx;
+};
 getData(MAX_DAYS).then(data => {
 	// console.log(data);
     // console.log(result.data.candlestick[0].ohlcv);
@@ -204,7 +212,7 @@ getData(MAX_DAYS).then(data => {
         }
     	if (date.getHours() === 0 && date.getMinutes() === 0) {
     		// console.log(date);
-    		drawDashLineV(context, 0, SCREEN_HEIGHT, ii*(config.candlestick.width+2)+3.5, 3, 0.5, 'rgb(60,60,60)');
+    		drawDashLineV(context, 0, SCREEN_HEIGHT, xFromI(ii)+0.5, 3, 0.5, 'rgb(60,60,60)');
     		/*
     		var xx = ii*(config.candlestick.width+2)+3.5;
     		context.fillStyle = "rgb(219,86,76)";
@@ -227,8 +235,8 @@ getData(MAX_DAYS).then(data => {
         }
 	}
 	console.log(minReal, maxReal);
-	maxReal = Math.ceil(maxReal+maxReal*0.05);
-	minReal = Math.floor(minReal-minReal*0.05);
+	maxReal = Math.ceil(maxReal+maxReal*0.01);
+	minReal = Math.floor(minReal-minReal*0.01);
 	if (maxReal === minReal) {
 		minReal = minReal - 1;
 	}
@@ -291,7 +299,7 @@ getData(MAX_DAYS).then(data => {
 	        var y = (maxReal - (high > low ? high : low)) / step;
 	        //console.log(height+","+new Date(data[ii][5]));
 	        // console.log(y);
-	        var x = (config.candlestick.width+2)*ii+1+(Math.floor(config.candlestick.width/2));
+	        var x = xFromI(ii);//(config.candlestick.width+2)*ii+1+(Math.floor(config.candlestick.width/2));
 	        // console.log(x);
 	        context.fillRect(x, y, 0.8, height<1?1:height); // x, y, width, height
 		}
@@ -329,7 +337,7 @@ getData(MAX_DAYS).then(data => {
 	    	context.lineWidth = 0.5;
 	    	drawDashLineH(context, 0, BBBBBBBBBBBB, y, 3, 0.5, '#fff'); // mouse h line
 
-	        var xx = (config.candlestick.width+2) * Math.floor(x / (config.candlestick.width+2))+(Math.floor(config.candlestick.width/2))+1.5;
+	        var xx = xFromX(x);//(config.candlestick.width+2) * Math.floor(x / (config.candlestick.width+2))+(Math.floor(config.candlestick.width/2))+1.5;
 	    	//console.log(xx,xx/(config.candlestick.width+2));
 	    	//context.fillRect(xx, 0, 0.5, 800);  // V line
 	    	drawDashLineV(context, 0, 800, xx, 3, 0.5, '#fff'); // mouse v line
@@ -353,7 +361,8 @@ getData(MAX_DAYS).then(data => {
 	    	}
 	    	// label
 	        {
-	            var label = $format('Open:{0}  High:{1}  Low:{2}  Close:{3}', data[idx][0], data[idx][1], data[idx][2], data[idx][3]);
+	    		var diff = (data[idx][1]-data[idx][2]).toFixed(3);
+	            var label = $format('Open:{0}  High:{1}  Low:{2}  Close:{3} {4}', data[idx][0], data[idx][1], data[idx][2], data[idx][3], diff);
 	            context.textBaseline = "top";
 	            context.fillText(label, 0, 0);
 	        }
