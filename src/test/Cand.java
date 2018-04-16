@@ -21,6 +21,7 @@ import utils.DateUtil;
 
 public class Cand {
 
+    private static final BigDecimal LENGTH = new BigDecimal(20);
     private static final BigDecimal ONE = new BigDecimal(1);
     private static final BigDecimal TWO = new BigDecimal(2);
     private static final int OPEN = 0;
@@ -30,14 +31,13 @@ public class Cand {
 
     public static void main(String[] args) throws Exception, Exception {
         final Bitbankcc bb = new Bitbankcc();
-        List<BigDecimal[]> list = org(bb, CandleType._5MIN, 1000);
+        List<BigDecimal[]> list = org(bb, CandleType._5MIN, LENGTH.intValue() + 1);
 
         // calc boll
         List<BigDecimal[]> boll = new ArrayList<BigDecimal[]>();
         for (int ii = 0; ii < list.size(); ii++) {
             boll.add(new BigDecimal[5]);
         }
-        final BigDecimal LENGTH = new BigDecimal(20);
         for (int ii = 0; ii < list.size(); ii++) {
             if (ii < LENGTH.intValue() - 1) {
                 continue;
@@ -66,12 +66,7 @@ public class Cand {
             }
             System.out.println();
         }
-        /*
-        for (BigDecimal[] ohlcv : list) {
-            // open, high, low, close, volume, date
-            System.out.println(String.format("%s\t%s\t%s\t%s\t%s", DateUtil.me().format1(ohlcv[5].longValue()), ohlcv[0], ohlcv[1], ohlcv[2], ohlcv[3]));
-        }
-        */
+
     }
 
     private static final List<BigDecimal[]> org(final Bitbankcc bb, final CandleType candleType, final int max) throws BitbankException, IOException {
