@@ -19,7 +19,7 @@ import cc.bitbank.entity.enums.CurrencyPair;
 import cc.bitbank.exception.BitbankException;
 import utils.DateUtil;
 
-public class Cand {
+public class Cand implements Runnable {
 
     private static final BigDecimal LENGTH = new BigDecimal(20);
     private static final BigDecimal ONE = new BigDecimal(1);
@@ -28,10 +28,15 @@ public class Cand {
     private static final int HIGH = 1;
     private static final int LOW = 2;
     private static final int CLOSE = 3;
+    final Bitbankcc bb = new Bitbankcc();
 
     public static void main(String[] args) throws Exception, Exception {
-        final Bitbankcc bb = new Bitbankcc();
-        List<BigDecimal[]> list = org(bb, CandleType._5MIN, LENGTH.intValue() + 1);
+        Cand cand = new Cand();
+        cand.execute();
+    }
+
+    public void execute() throws Exception, Exception {
+        List<BigDecimal[]> list = this.org(bb, CandleType._5MIN, LENGTH.intValue() + 1);
 
         // calc boll
         List<BigDecimal[]> boll = new ArrayList<BigDecimal[]>();
@@ -66,10 +71,9 @@ public class Cand {
             }
             System.out.println();
         }
-
     }
 
-    private static final List<BigDecimal[]> org(final Bitbankcc bb, final CandleType candleType, final int max) throws BitbankException, IOException {
+    private final List<BigDecimal[]> org(final Bitbankcc bb, final CandleType candleType, final int max) throws BitbankException, IOException {
         final List<BigDecimal[]> list = new ArrayList<BigDecimal[]>();
         final Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
@@ -91,7 +95,7 @@ public class Cand {
         return reslt;
     }
 
-    private static final BigDecimal ma(final List<BigDecimal[]> list, final int index, final BigDecimal length) {
+    private final BigDecimal ma(final List<BigDecimal[]> list, final int index, final BigDecimal length) {
         BigDecimal result = BigDecimal.ZERO;
         for (int ii = index - length.intValue() + 1; ii <= index; ii++) {
             BigDecimal[] ohlcv = list.get(ii);
@@ -100,7 +104,7 @@ public class Cand {
         return result.divide(length, 4, RoundingMode.HALF_UP);
     }
 
-    private static final BigDecimal boll(final List<BigDecimal[]> list, final int index, final BigDecimal length, final int sigma) {
+    private final BigDecimal boll(final List<BigDecimal[]> list, final int index, final BigDecimal length, final int sigma) {
         SynchronizedSummaryStatistics stats = new SynchronizedSummaryStatistics();
         for (int ii = index - length.intValue() + 1; ii <= index; ii++) {
             BigDecimal[] ohlcv = list.get(ii);
@@ -109,14 +113,14 @@ public class Cand {
         return new BigDecimal(FastMath.sqrt(stats.getPopulationVariance())).setScale(4, RoundingMode.HALF_UP);
     }
 
-    private static final BigDecimal getHigher(BigDecimal[] ohlcv) {
+    private final BigDecimal getHigher(BigDecimal[] ohlcv) {
         if (ohlcv[OPEN].compareTo(ohlcv[CLOSE]) >= 0) {
             return ohlcv[OPEN];
         }
         return ohlcv[CLOSE];
     }
 
-    private static final BigDecimal getLower(BigDecimal[] ohlcv) {
+    private final BigDecimal getLower(BigDecimal[] ohlcv) {
         if (ohlcv[OPEN].compareTo(ohlcv[CLOSE]) <= 0) {
             return ohlcv[OPEN];
         }
@@ -140,6 +144,15 @@ public class Cand {
         Double varp = stats.getPopulationVariance();
         Double stdevp = FastMath.sqrt(varp);
         return Precision.round(stdevp, 2);
+    }
+
+    @Override
+    public void run() {
+        try {
+            this.execute();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }
