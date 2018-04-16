@@ -1,5 +1,6 @@
 package pubnub;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,10 +12,7 @@ import com.pubnub.api.models.consumer.pubsub.PNMessageResult;
 
 import cc.Config;
 import cc.bitbank.Bitbankcc;
-import cc.bitbank.entity.Order;
 import cc.bitbank.entity.enums.CurrencyPair;
-import cc.bitbank.entity.enums.OrderSide;
-import cc.bitbank.entity.enums.OrderType;
 import gui.TS;
 import utils.DateUtil;
 
@@ -36,7 +34,7 @@ public class TSMonitor extends BBReal {
 
     private static final List<TS> TS_LIST = new ArrayList<TS>();
     static {
-        // TS_LIST.add(new TS(28386927L, new BigDecimal("52.0500"), new BigDecimal(100), new BigDecimal("50"), new BigDecimal("0.25")));
+//        TS_LIST.add(new TS(30027730L, new BigDecimal("71.4490"), new BigDecimal(100), new BigDecimal("50"), new BigDecimal("0.25")));
     }
 
     @Override
@@ -51,26 +49,28 @@ public class TSMonitor extends BBReal {
             if (!check) {
                 continue;
             }
-            new Thread() {
-                @Override
-                public void run() {
-                    logger.debug("sell(MARKET):{} at {}", ts.amount, hoge.data.buy);
-                    try {
-                        Order order = bb.sendOrder(CurrencyPair.XRP_JPY, hoge.data.buy, ts.amount, OrderSide.SELL, OrderType.LIMIT);
-                        System.out.println(order);
-                        if (order == null || order.orderId == 0) {
-                            throw new Exception("order is null");
-                        }
-                        do {
-                            order = bb.getOrder(CurrencyPair.XRP_JPY, order.orderId);
-                            System.out.println(order);
-                            sleeeeeep(1000);
-                        } while (!order.status.equals("FULLY_FILLED"));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }.start();
+            new Thread(new Seller(bb, CurrencyPair.XRP_JPY, hoge.data.buy, ts.amount)).start();
+            TS_LIST.remove(ts);
+            //            new Thread() {
+            //                @Override
+            //                public void run() {
+            //                    logger.debug("sell(MARKET):{} at {}", ts.amount, hoge.data.buy);
+            //                    try {
+            //                        Order order = bb.sendOrder(CurrencyPair.XRP_JPY, hoge.data.buy, ts.amount, OrderSide.SELL, OrderType.LIMIT);
+            //                        System.out.println(order);
+            //                        if (order == null || order.orderId == 0) {
+            //                            throw new Exception("order is null");
+            //                        }
+            //                        do {
+            //                            order = bb.getOrder(CurrencyPair.XRP_JPY, order.orderId);
+            //                            System.out.println(order);
+            //                            sleeeeeep(1000);
+            //                        } while (!order.status.equals("FULLY_FILLED"));
+            //                    } catch (Exception e) {
+            //                        e.printStackTrace();
+            //                    }
+            //                }
+            //            }.start();
         }
     }
 
