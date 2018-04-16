@@ -17,6 +17,7 @@ import cc.bitbank.entity.Candlestick;
 import cc.bitbank.entity.enums.CandleType;
 import cc.bitbank.entity.enums.CurrencyPair;
 import cc.bitbank.exception.BitbankException;
+import t.Twiite;
 import utils.DateUtil;
 
 public class Cand implements Runnable {
@@ -60,16 +61,38 @@ public class Cand implements Runnable {
             // open, high, low, close, volume, date
             BigDecimal[] ohlcv = list.get(ii);
             System.out.print(String.format("%s\t%s\t%s\t%s\t%s", DateUtil.me().format1(ohlcv[5].longValue()), ohlcv[OPEN], ohlcv[HIGH], ohlcv[LOW], ohlcv[CLOSE]));
-            BigDecimal[] row = boll.get(ii);
-            System.out.print(String.format("\t|\t%s\t%s\t%s\t%s\t%s", row[0], row[1], row[2], row[3], row[4]));
-            if (row[0] != null && row[1] != null && row[2] != null && row[3] != null && row[4] != null) {
-                if (getHigher(ohlcv).compareTo(row[2]) > 0) {
-                    System.out.print(String.format("\t|\t%s\t↑↑↑", getHigher(ohlcv).subtract(row[2])));
-                } else if (getLower(ohlcv).compareTo(row[4]) < 0) {
-                    System.out.print(String.format("\t|\t%s\t↓↓↓", getLower(ohlcv).subtract(row[4])));
-                }
+            BigDecimal[] bollRow = boll.get(ii);
+            System.out.print(String.format("\t|\t%s\t%s\t%s\t%s\t%s", bollRow[0], bollRow[1], bollRow[2], bollRow[3], bollRow[4]));
+            if (bollRow[0] != null && bollRow[1] != null && bollRow[2] != null && bollRow[3] != null && bollRow[4] != null) {
+                this.check(ohlcv, bollRow[2], bollRow[4], false);
             }
             System.out.println();
+        }
+        final BigDecimal[] lastOhlcv = list.get(list.size() - 1);
+        final BigDecimal[] lastBollRow = boll.get(boll.size() - 1);
+        this.check(lastOhlcv, lastBollRow[2], lastBollRow[4], true);
+    }
+
+    private void check(final BigDecimal[] ohlcv, final BigDecimal sigmaPlus2, final BigDecimal sigmaMinus2, boolean twitter) {
+        {
+            final BigDecimal higher = getHigher(ohlcv);
+            if (higher.compareTo(sigmaPlus2) > 0) {
+                if (twitter) {
+                    new Thread(new Twiite(String.format("下落可能！↓↓↓", higher.subtract(sigmaPlus2)))).start();
+                } else {
+                    System.out.print(String.format("\t|\t%s\t↑↑↑", higher.subtract(sigmaPlus2)));
+                }
+            }
+        }
+        {
+            final BigDecimal lower = getLower(ohlcv);
+            if (lower.compareTo(sigmaMinus2) < 0) {
+                if (twitter) {
+                    new Thread(new Twiite(String.format("上昇可能！↑↑↑", lower.subtract(sigmaMinus2)))).start();
+                } else {
+                    System.out.print(String.format("\t|\t%s\t↓↓↓", lower.subtract(sigmaMinus2)));
+                }
+            }
         }
     }
 
