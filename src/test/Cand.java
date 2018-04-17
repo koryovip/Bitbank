@@ -19,6 +19,7 @@ import cc.bitbank.entity.enums.CurrencyPair;
 import cc.bitbank.exception.BitbankException;
 import t.Twiite;
 import utils.DateUtil;
+import utils.OtherUtil;
 
 public class Cand implements Runnable {
 
@@ -68,8 +69,8 @@ public class Cand implements Runnable {
             }
             System.out.println();
         }
-        final BigDecimal[] lastOhlcv = list.get(list.size() - 1);
-        final BigDecimal[] lastBollRow = boll.get(boll.size() - 1);
+        final BigDecimal[] lastOhlcv = OtherUtil.me().lastItem(list);
+        final BigDecimal[] lastBollRow = OtherUtil.me().lastItem(boll);
         this.check(lastOhlcv, lastBollRow[2], lastBollRow[4], true);
     }
 
