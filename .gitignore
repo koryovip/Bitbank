@@ -2,3 +2,6 @@
 src/cc
 lib
 bin
+test
+src/twitter4j.properties
+testlog.log

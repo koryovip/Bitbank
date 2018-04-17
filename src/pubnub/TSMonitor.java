@@ -34,7 +34,7 @@ public class TSMonitor extends BBReal {
 
     private static final List<TS> TS_LIST = new ArrayList<TS>();
     static {
-//        TS_LIST.add(new TS(30027730L, new BigDecimal("71.4490"), new BigDecimal(100), new BigDecimal("50"), new BigDecimal("0.25")));
+        TS_LIST.add(new TS(30047606L, new BigDecimal("70.8800"), new BigDecimal(100), new BigDecimal("50"), new BigDecimal("0.3")));
     }
 
     @Override
@@ -50,7 +50,7 @@ public class TSMonitor extends BBReal {
                 continue;
             }
             new Thread(new Seller(bb, CurrencyPair.XRP_JPY, hoge.data.buy, ts.amount)).start();
-            TS_LIST.remove(ts);
+            TS_LIST.remove(0);
             //            new Thread() {
             //                @Override
             //                public void run() {

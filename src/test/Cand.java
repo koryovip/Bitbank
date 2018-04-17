@@ -21,7 +21,7 @@ import utils.OtherUtil;
 
 public class Cand implements Runnable, Exchange {
 
-    private static final BigDecimal LENGTH = new BigDecimal(20);
+    private static final BigDecimal period = new BigDecimal(20);
 
     private static final int OPEN = 0;
     private static final int HIGH = 1;
@@ -35,9 +35,9 @@ public class Cand implements Runnable, Exchange {
 
     public void execute(Exchange exchange) throws Exception, Exception {
         final int round = 4;
-        List<CandleValue> candleValueList = exchange.getCandles(null, LENGTH.intValue() + 1);
+        List<CandleValue> candleValueList = exchange.getCandles(null, period.intValue() + 10);
         // calc boll
-        List<BollValue> bollValueList = CalcBoll.me().calc(candleValueList, LENGTH, round);
+        List<BollValue> bollValueList = CalcBoll.me().calc(candleValueList, period, round);
 
         for (int ii = 0; ii < candleValueList.size(); ii++) {
             // open, high, low, close, volume, date
@@ -88,7 +88,7 @@ public class Cand implements Runnable, Exchange {
     }
 
     @Override
-    public List<CandleValue> getCandles(KRCandleType candleType, int maxCount) throws Exception {
+    public List<CandleValue> getCandles(final KRCandleType candleType, final int limit) throws Exception {
         final List<BigDecimal[]> list = new ArrayList<BigDecimal[]>();
         final Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
@@ -101,7 +101,7 @@ public class Cand implements Runnable, Exchange {
                 list.add(result.candlestick[0].ohlcv[ii]);
             }
             calendar.add(Calendar.DATE, -1);
-        } while (list.size() + result.candlestick.length <= maxCount);
+        } while (list.size() + result.candlestick.length <= limit);
 
         final List<CandleValue> reslt = new ArrayList<CandleValue>();
         // 若い日付を前にする。（リストを逆順にする）
