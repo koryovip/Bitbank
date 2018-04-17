@@ -79,9 +79,9 @@ public class Cand implements Runnable {
             final BigDecimal higher = getHigher(ohlcv);
             if (higher.compareTo(sigmaPlus2) > 0) {
                 if (twitter) {
-                    new Thread(new Twiite(String.format("下落可能！↓↓↓", higher.subtract(sigmaPlus2)))).start();
+                    new Thread(new Twiite(String.format("下落可能！↓↓↓ 幅[%s]", sigmaPlus2.subtract(sigmaMinus2)))).start();
                 } else {
-                    System.out.print(String.format("\t|\t%s\t↑↑↑", higher.subtract(sigmaPlus2)));
+                    System.out.print(String.format("\t|\t%s\t↑↑↑", sigmaPlus2.subtract(sigmaMinus2)));
                 }
             }
         }
@@ -89,9 +89,9 @@ public class Cand implements Runnable {
             final BigDecimal lower = getLower(ohlcv);
             if (lower.compareTo(sigmaMinus2) < 0) {
                 if (twitter) {
-                    new Thread(new Twiite(String.format("上昇可能！↑↑↑", lower.subtract(sigmaMinus2)))).start();
+                    new Thread(new Twiite(String.format("上昇可能！↑↑↑ 幅[%s]", sigmaPlus2.subtract(sigmaMinus2)))).start();
                 } else {
-                    System.out.print(String.format("\t|\t%s\t↓↓↓", lower.subtract(sigmaMinus2)));
+                    System.out.print(String.format("\t|\t%s\t↓↓↓", sigmaPlus2.subtract(sigmaMinus2)));
                 }
             }
         }

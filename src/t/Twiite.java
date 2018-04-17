@@ -18,7 +18,7 @@ public class Twiite implements Runnable {
     public void run() {
         Twitter twitter = TwitterFactory.getSingleton();
         try {
-            String msg = this.twitter + " @koryovip " + DateUtil.me().format2(new Date());
+            String msg = String.format("%s %s @koryovip", this.twitter, DateUtil.me().format5(new Date()));
             System.out.println("Twitter:" + msg);
             twitter.updateStatus(msg);
         } catch (TwitterException e) {

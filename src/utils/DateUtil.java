@@ -15,6 +15,7 @@ public class DateUtil {
     private final ThreadLocal<DateFormat> sdf2;
     private final ThreadLocal<DateFormat> sdf3;
     private final ThreadLocal<DateFormat> sdf4;
+    private final ThreadLocal<DateFormat> sdf5;
 
     private DateUtil() {
         sdf1 = new ThreadLocal<DateFormat>() {
@@ -41,6 +42,12 @@ public class DateUtil {
                 return new SimpleDateFormat("YYYYMM");
             }
         };
+        sdf5 = new ThreadLocal<DateFormat>() {
+            @Override
+            protected DateFormat initialValue() {
+                return new SimpleDateFormat("HH:mm:ss");
+            }
+        };
     }
 
     final public String format1(Date date) {
@@ -65,6 +72,10 @@ public class DateUtil {
 
     final public String format4(Date date) {
         return sdf4.get().format(date);
+    }
+
+    final public String format5(Date date) {
+        return sdf5.get().format(date);
     }
 
     public static void main(String[] args) {
