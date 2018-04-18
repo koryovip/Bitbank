@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -57,7 +58,9 @@ public class BitBankMainFrame extends JPanel {
     // private static final List<TS> TS_LIST = new ArrayList<TS>();
 
     static {
-        ORDER_HISTORY.add(30499297L);
+        ORDER_HISTORY.add(30581912L);
+        ORDER_HISTORY.add(30584874L);
+        ORDER_HISTORY.add(30588498L);
 
         //        TS_LIST.add(new TS(22404937L, new BigDecimal(69.1), new BigDecimal(2541.5631), new BigDecimal(69.1), new BigDecimal(1)));
         //        TS_LIST.add(new TS(22404556L, new BigDecimal(69.1), new BigDecimal(2542), new BigDecimal(69.0), new BigDecimal(1)));
@@ -103,7 +106,7 @@ public class BitBankMainFrame extends JPanel {
         initGUI();
 
         updateXRPBalance();
-        update(5, 3);
+        update(3, 3);
 
         TSMonitor monitor = new TSMonitor(new TSMonitorUpdater() {
             @Override
@@ -416,58 +419,77 @@ public class BitBankMainFrame extends JPanel {
         //                }
         //            }, 0, delay, TimeUnit.SECONDS);
         //        }
+        //        {
+        //            ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+        //            service.scheduleWithFixedDelay(() -> {
+        //                try {
+        //                    Map<String, Long> option = new HashMap<String, Long>();
+        //                    option.put("count", 10L);
+        //                    Orders orders = BitbankClient.me().bbR.getActiveOrders(Config.me().getPair(), option);
+        //                    //                    logger.debug("getActiveOrders");
+        //                    //                    boolean updateXRPBalance = false;
+        //                    for (Order order : orders.orders) {
+        //                        // logger.debug(order);
+        //                        //                        if (model.addOrUpdRowData(buy, order)) {
+        //                        //                            updateXRPBalance = true;
+        //                        //                        }
+        //                        updateOrderId(order.orderId);
+        //                    }
+        //                    //                    if (updateXRPBalance) {
+        //                    //                        updateXRPBalance();
+        //                    //                    }
+        //                } catch (BitbankException | IOException e) {
+        //                    e.printStackTrace();
+        //                }
+        //            } , 0, delay2, TimeUnit.SECONDS);
+        //        }
         {
             ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
             service.scheduleWithFixedDelay(() -> {
                 try {
-                    Map<String, Long> option = new HashMap<String, Long>();
-                    option.put("count", 10L);
-                    Orders orders = BitbankClient.me().bbR.getActiveOrders(Config.me().getPair(), option);
-                    //                    logger.debug("getActiveOrders");
-                    //                    boolean updateXRPBalance = false;
-                    for (Order order : orders.orders) {
-                        // logger.debug(order);
-                        //                        if (model.addOrUpdRowData(buy, order)) {
-                        //                            updateXRPBalance = true;
-                        //                        }
-                        updateOrderId(order.orderId);
-                    }
-                    //                    if (updateXRPBalance) {
-                    //                        updateXRPBalance();
-                    //                    }
-                } catch (BitbankException | IOException e) {
-                    e.printStackTrace();
-                }
-            }, 1, delay2, TimeUnit.SECONDS);
-        }
-        {
-            ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-            service.scheduleWithFixedDelay(() -> {
-                try {
-                    long[] orderIds = new long[ORDER_HISTORY.size()];
-                    for (int ii = 0; ii < orderIds.length; ii++) {
-                        orderIds[ii] = ORDER_HISTORY.get(ii);
-                        logger.debug(orderIds[ii]);
-                    }
-                    final Orders orders = BitbankClient.me().bbR.getOrders(Config.me().getPair(), orderIds);
-                    //                    logger.debug("getOrders:" + orders.orders == null ? 0 : orders.orders.length);
-                    boolean updateXRPBalance = false;
-                    for (final Order order : orders.orders) {
-                        // logger.debug(order);
-                        if (model.addOrUpdRowData(buy, order)) {
-                            updateXRPBalance = true;
+                    // getActiveOrders
+                    {
+                        Map<String, Long> option = new HashMap<String, Long>();
+                        option.put("count", 10L);
+                        Orders orders = BitbankClient.me().bbR.getActiveOrders(Config.me().getPair(), option);
+                        for (Order order : orders.orders) {
+                            updateOrderId(order.orderId);
                         }
                     }
-                    if (updateXRPBalance) {
-                        updateXRPBalance();
-                    }
-                    for (final Order order : orders.orders) {
-                        if (order.status.equals("FULLY_FILLED") || order.status.equals("CANCELED_UNFILLED")) {
-                            // 約定済み, 取消済
-                            for (Long orderId : ORDER_HISTORY) {
-                                if (orderId == order.orderId) {
-                                    ORDER_HISTORY.remove(orderId);
-                                    logger.debug("removed:" + orderId);
+                    // getOrders
+                    {
+                        int size = ORDER_HISTORY.size();
+                        logger.debug(size);
+                        if (size <= 0) {
+                            return;
+                        }
+                        long[] orderIds = new long[size];
+                        for (int ii = 0; ii < orderIds.length; ii++) {
+                            orderIds[ii] = ORDER_HISTORY.get(ii);
+                            logger.debug(orderIds[ii]);
+                        }
+                        final Orders orders = BitbankClient.me().bbR.getOrders(Config.me().getPair(), orderIds);
+                        //                    logger.debug("getOrders:" + orders.orders == null ? 0 : orders.orders.length);
+                        boolean updateXRPBalance = false;
+                        for (final Order order : orders.orders) {
+                            // logger.debug(order);
+                            if (model.addOrUpdRowData(buy, order)) {
+                                updateXRPBalance = true;
+                            }
+                        }
+                        if (updateXRPBalance) {
+                            updateXRPBalance();
+                        }
+                        for (final Order order : orders.orders) {
+                            if (order.status.equals("FULLY_FILLED") || order.status.equals("CANCELED_UNFILLED")) {
+                                // 約定済み, 取消済
+                                Iterator<Long> it = ORDER_HISTORY.iterator();
+                                while (it.hasNext()) {
+                                    long orderId = it.next();
+                                    if (orderId == order.orderId) {
+                                        it.remove();
+                                        logger.debug("removed:" + orderId);
+                                    }
                                 }
                             }
                         }
@@ -475,7 +497,7 @@ public class BitBankMainFrame extends JPanel {
                 } catch (BitbankException | IOException e) {
                     e.printStackTrace();
                 }
-            }, 0, delay1, TimeUnit.SECONDS);
+            } , 0, delay1, TimeUnit.SECONDS);
         }
     }
 
