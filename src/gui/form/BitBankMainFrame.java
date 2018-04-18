@@ -30,7 +30,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import cc.Config;
-import cc.bitbank.Bitbankcc;
 import cc.bitbank.entity.Assets;
 import cc.bitbank.entity.Assets.Asset;
 import cc.bitbank.entity.Order;
@@ -44,6 +43,7 @@ import gui.TS;
 import gui.popup.TablePopupMenu;
 import gui.renderer.StripeTableRenderer;
 import gui.tablemodel.RowDataModel;
+import utils.BitbankClient;
 import utils.DateUtil;
 
 public class BitBankMainFrame extends JPanel {
@@ -56,7 +56,7 @@ public class BitBankMainFrame extends JPanel {
     private static final List<TS> TS_LIST = new ArrayList<TS>();
 
     static {
-        ORDER_HISTORY.add(30047606L);
+        ORDER_HISTORY.add(30499297L);
 
         //        TS_LIST.add(new TS(22404937L, new BigDecimal(69.1), new BigDecimal(2541.5631), new BigDecimal(69.1), new BigDecimal(1)));
         //        TS_LIST.add(new TS(22404556L, new BigDecimal(69.1), new BigDecimal(2542), new BigDecimal(69.0), new BigDecimal(1)));
@@ -90,7 +90,6 @@ public class BitBankMainFrame extends JPanel {
     BigDecimal stopFix = new BigDecimal(3000);
     BigDecimal buyPrice = new BigDecimal(982000L);
     BigDecimal amount = new BigDecimal(0.2037);
-    final Bitbankcc bb = new Bitbankcc();
 
     private BitBankMainFrame() {
         setLayout(null);
@@ -99,7 +98,6 @@ public class BitBankMainFrame extends JPanel {
 
         init();
 
-        bb.setKey(Config.me().getApiKey(), Config.me().getApiSecret());
         updateXRPBalance();
 
         update(3);
@@ -202,7 +200,7 @@ public class BitBankMainFrame extends JPanel {
                         BigDecimal price = sell;
                         BigDecimal amount = new BigDecimal(buyAmountFixed);
                         logger.debug("buy:" + price.toPlainString());
-                        Order order = bb.sendOrder(Config.me().getPair(), price, amount, OrderSide.BUY, OrderType.LIMIT);
+                        Order order = BitbankClient.me().bbW.sendOrder(Config.me().getPair(), price, amount, OrderSide.BUY, OrderType.LIMIT);
                         if (order != null && order.orderId != 0) {
                             // JOptionPane.showMessageDialog(me(), order.toString(), "Info", JOptionPane.INFORMATION_MESSAGE);
                             logger.debug(order);
@@ -243,7 +241,7 @@ public class BitBankMainFrame extends JPanel {
                         BigDecimal price = buy;
                         BigDecimal amount = model.getExecutedAmount(selectedRowIndex);
                         logger.debug("sell:" + price.toPlainString() + ", amount:" + amount.toPlainString());
-                        Order order = bb.sendOrder(Config.me().getPair(), price, amount, OrderSide.SELL, OrderType.LIMIT);
+                        Order order = BitbankClient.me().bbW.sendOrder(Config.me().getPair(), price, amount, OrderSide.SELL, OrderType.LIMIT);
                         if (order != null && order.orderId != 0) {
                             // JOptionPane.showMessageDialog(me(), order.toString(), "Info", JOptionPane.INFORMATION_MESSAGE);
                             logger.debug(order);
@@ -278,7 +276,7 @@ public class BitBankMainFrame extends JPanel {
                     final long orderId = model.getOrderId(selectedRowIndex);
                     logger.debug(orderId);
                     try {
-                        Order order = bb.cancelOrder(Config.me().getPair(), orderId);
+                        Order order = BitbankClient.me().bbW.cancelOrder(Config.me().getPair(), orderId);
                         if (order != null && order.orderId != 0) {
                             // JOptionPane.showMessageDialog(me(), order.toString(), "Info", JOptionPane.INFORMATION_MESSAGE);
                             logger.debug(order);
@@ -331,7 +329,7 @@ public class BitBankMainFrame extends JPanel {
             ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
             service.scheduleWithFixedDelay(() -> {
                 try {
-                    Ticker ticker = bb.getTicker(Config.me().getPair());
+                    Ticker ticker = BitbankClient.me().bbR.getTicker(Config.me().getPair());
                     //                    logger.debug("getTicker");
                     sell = ticker.sell;
                     buy = ticker.buy;
@@ -381,7 +379,7 @@ public class BitBankMainFrame extends JPanel {
                 try {
                     Map<String, Long> option = new HashMap<String, Long>();
                     option.put("count", 10L);
-                    Orders orders = bb.getActiveOrders(Config.me().getPair(), option);
+                    Orders orders = BitbankClient.me().bbR.getActiveOrders(Config.me().getPair(), option);
                     //                    logger.debug("getActiveOrders");
                     //                    boolean updateXRPBalance = false;
                     for (Order order : orders.orders) {
@@ -408,7 +406,7 @@ public class BitBankMainFrame extends JPanel {
                         orderIds[ii] = ORDER_HISTORY.get(ii);
                         //logger.debug(orderIds[ii]);
                     }
-                    Orders orders = bb.getOrders(Config.me().getPair(), orderIds);
+                    Orders orders = BitbankClient.me().bbR.getOrders(Config.me().getPair(), orderIds);
                     //                    logger.debug("getOrders:" + orders.orders == null ? 0 : orders.orders.length);
                     boolean updateXRPBalance = false;
                     for (Order order : orders.orders) {
@@ -444,7 +442,7 @@ public class BitBankMainFrame extends JPanel {
         try {
             isUpdatingBalance = true;
             //            logger.debug("isUpdatingBalance:" + isUpdatingBalance);
-            Assets assets = bb.getAsset();
+            Assets assets = BitbankClient.me().bbR.getAsset();
             /*
                     asset アセット名
                     amount_precision 小数点の表示精度
@@ -481,6 +479,6 @@ public class BitBankMainFrame extends JPanel {
     }
 
     private Order doSellMARKET(CurrencyPair pair, BigDecimal amount) throws BitbankException, IOException {
-        return bb.sendOrder(pair, BigDecimal.valueOf(0), amount, OrderSide.SELL, OrderType.MARKET);
+        return BitbankClient.me().bbW.sendOrder(pair, BigDecimal.valueOf(0), amount, OrderSide.SELL, OrderType.MARKET);
     }
 }

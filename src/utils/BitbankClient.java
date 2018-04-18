@@ -10,11 +10,15 @@ public class BitbankClient {
         return singleton;
     }
 
-    public final Bitbankcc bb;
+    public final Bitbankcc bbR;
+    public final Bitbankcc bbW;
 
     private BitbankClient() {
-        this.bb = new Bitbankcc();
-        this.bb.setKey(Config.me().getApiKey(), Config.me().getApiSecret());
+        this.bbR = new Bitbankcc();
+        this.bbR.setKey(Config.me().getApiKeyR(), Config.me().getApiSecretR());
+
+        this.bbW = new Bitbankcc();
+        this.bbW.setKey(Config.me().getApiKeyW(), Config.me().getApiSecretW());
     }
 
 }

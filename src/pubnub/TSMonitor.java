@@ -10,8 +10,6 @@ import org.apache.logging.log4j.Logger;
 import com.pubnub.api.PubNub;
 import com.pubnub.api.models.consumer.pubsub.PNMessageResult;
 
-import cc.Config;
-import cc.bitbank.Bitbankcc;
 import cc.bitbank.entity.enums.CurrencyPair;
 import gui.TS;
 import utils.DateUtil;
@@ -20,10 +18,8 @@ public class TSMonitor extends BBReal {
 
     private Logger logger = LogManager.getLogger();
 
-    final Bitbankcc bb = new Bitbankcc();
-
     public TSMonitor() {
-        bb.setKey(Config.me().getApiKey(), Config.me().getApiSecret());
+
     }
 
     @Override
@@ -34,7 +30,7 @@ public class TSMonitor extends BBReal {
 
     private static final List<TS> TS_LIST = new ArrayList<TS>();
     static {
-        TS_LIST.add(new TS(30047606L, new BigDecimal("70.8800"), new BigDecimal(100), new BigDecimal("50"), new BigDecimal("0.3")));
+        TS_LIST.add(new TS(30499297L, new BigDecimal("71.6200"), new BigDecimal(100), new BigDecimal("50"), new BigDecimal("0.3")));
     }
 
     @Override
@@ -49,7 +45,7 @@ public class TSMonitor extends BBReal {
             if (!check) {
                 continue;
             }
-            new Thread(new Seller(bb, CurrencyPair.XRP_JPY, hoge.data.buy, ts.amount)).start();
+            new Thread(new Seller(CurrencyPair.XRP_JPY, hoge.data.buy, ts.amount)).start();
             TS_LIST.remove(0);
             //            new Thread() {
             //                @Override
