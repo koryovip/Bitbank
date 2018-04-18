@@ -3,6 +3,7 @@ package test;
 import java.math.BigDecimal;
 import java.util.List;
 
+import cc.Config;
 import cc.bitbank.entity.enums.CandleType;
 import cc.bitbank.entity.enums.CurrencyPair;
 import ifc.BollValue;
@@ -19,7 +20,7 @@ public class Cand implements Runnable {
         final int period = 20;
         final int limit = period + 10;
         final CandleType candleType = CandleType._5MIN;
-        final CurrencyPair pair = CurrencyPair.XRP_JPY;
+        final CurrencyPair pair = Config.me().getPair(); //CurrencyPair.XRP_JPY;
         final int round = 4;
         Exchange<CurrencyPair, CandleType> xxx = new BitbankExchange();
 

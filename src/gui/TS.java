@@ -12,6 +12,7 @@ public class TS {
     public final BigDecimal amount;
     public BigDecimal lostCut;
     public BigDecimal tralingStop;
+    private boolean onSelling = false;
 
     public TS(long orderId, BigDecimal bought, BigDecimal amount, BigDecimal lostCut, BigDecimal tralingStop) {
         this.orderId = orderId;
@@ -19,6 +20,10 @@ public class TS {
         this.amount = amount;
         this.lostCut = lostCut;
         this.tralingStop = tralingStop;
+    }
+
+    public boolean onSelling() {
+        return this.onSelling;
     }
 
     //    public static void main(String[] args) {
@@ -60,7 +65,11 @@ public class TS {
     //    }
 
     public boolean check(final BigDecimal buy) {
+        if (this.onSelling) {
+            return false;
+        }
         if (buy.compareTo(lostCut) <= 0) {
+            this.onSelling = true;
             return true;
         }
         BigDecimal diff = buy.subtract(tralingStop);
@@ -69,6 +78,7 @@ public class TS {
         }
         // tralingStop
         if (sellPrice.compareTo(bought) > 0 && buy.compareTo(sellPrice) <= 0) {
+            this.onSelling = true;
             return true;
         }
         return false;
@@ -85,4 +95,21 @@ public class TS {
     public BigDecimal getSellPrice() {
         return this.sellPrice;
     }
+
+    public BigDecimal getDistance() {
+        return this.sellPrice.subtract(this.bought);
+    }
+
+    /**
+     * 勝利？TP > 買った値段の場合、true
+     * @return
+     */
+    public boolean isVictory() {
+        return getDistance().compareTo(BigDecimal.ZERO) > 0;
+    }
+
+    public BigDecimal profit() {
+        return getDistance().multiply(this.amount);
+    }
+
 }

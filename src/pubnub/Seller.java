@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import cc.Config;
 import cc.bitbank.entity.Order;
 import cc.bitbank.entity.enums.CurrencyPair;
 import cc.bitbank.entity.enums.OrderSide;
@@ -35,7 +36,7 @@ public class Seller implements Runnable {
                 throw new Exception("order is null");
             }
             do {
-                order = BitbankClient.me().bbR.getOrder(CurrencyPair.XRP_JPY, order.orderId);
+                order = BitbankClient.me().bbR.getOrder(Config.me().getPair(), order.orderId);
                 System.out.println(order);
                 sleeeeeep(1000);
             } while (!order.status.equals("FULLY_FILLED"));

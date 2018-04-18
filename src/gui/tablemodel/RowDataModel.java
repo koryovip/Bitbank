@@ -117,15 +117,41 @@ public class RowDataModel extends DefaultTableModel {
         return updateBalance;
     }
 
-    synchronized public void updRowDataTS(TS ts) {
-        int rowCount = super.getRowCount();
+    synchronized public void updRowData(final pubnub.json.ticker.Message hoge) {
+        final int rowCount = super.getRowCount();
+        for (int index = 0; index < rowCount; index++) {
+            final BigDecimal price = getAveragePrice(index);
+            final BigDecimal amount = getExecutedAmount(index);
+            final BigDecimal diff = hoge.data.buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP);
+            super.setValueAt(diff, index, COL_INDEX_DIFF);
+
+            final BigDecimal profit = hoge.data.buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP);
+            super.setValueAt(profit, index, COL_INDEX_PROFIT);
+
+            super.setValueAt(DateUtil.me().format2(hoge.data.timestamp), index, COL_INDEX_LASTUPD);
+        }
+    }
+
+    synchronized public void updRowDataTS(final TS ts) {
+        final int rowCount = super.getRowCount();
+        final int round = Config.me().getRoundCurrencyPair();
         for (int index = 0; index < rowCount; index++) {
             Object orderId = super.getValueAt(index, COL_INDEX_ORDER_ID);
             if (!orderId.toString().equals(Long.toString(ts.orderId))) {
                 continue;
             }
-            super.setValueAt(ts.lostCut.setScale(ROUND, RoundingMode.HALF_UP), index, COL_INDEX_LOSTCUT);
-            super.setValueAt(ts.getSellPrice().setScale(ROUND, RoundingMode.HALF_UP), index, COL_INDEX_TRALINGSTOP);
+
+            if (ts.onSelling()) {
+                super.setValueAt("On Selling", index, COL_INDEX_LOSTCUT);
+            } else {
+                super.setValueAt(ts.lostCut.setScale(round, RoundingMode.HALF_UP), index, COL_INDEX_LOSTCUT);
+            }
+
+            if (ts.isVictory()) {
+                super.setValueAt(ts.profit(), index, COL_INDEX_TRALINGSTOP);
+            } else {
+                super.setValueAt(ts.getDistance(), index, COL_INDEX_TRALINGSTOP);
+            }
         }
     }
 
