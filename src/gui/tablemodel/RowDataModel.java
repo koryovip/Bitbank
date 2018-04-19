@@ -110,6 +110,7 @@ public class RowDataModel extends DefaultTableModel {
             super.setValueAt(order.status, index, COL_INDEX_STATUS);
             super.setValueAt(DateUtil.me().format2(this.getOrderDate(order)), index, COL_INDEX_DATE);
             super.setValueAt(DateUtil.me().format2(new Date()), index, COL_INDEX_LASTUPD);
+            break;
         }
         return updateBalance;
     }

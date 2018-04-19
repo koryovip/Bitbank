@@ -463,4 +463,12 @@ public class BitBankMainFrame extends JPanel {
     private Order doSellMARKET(CurrencyPair pair, BigDecimal amount) throws BitbankException, IOException {
         return BitbankClient.me().bbW.sendOrder(pair, BigDecimal.valueOf(0), amount, OrderSide.SELL, OrderType.MARKET);
     }
+
+    final public void addOrder(Order order) {
+        model.addOrderData(order);
+    }
+
+    final public void updOrder(Order order) {
+        model.updOrderData(order);
+    }
 }

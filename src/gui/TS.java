@@ -2,6 +2,8 @@ package gui;
 
 import java.math.BigDecimal;
 
+import utils.OtherUtil;
+
 public class TS {
 
     private final BigDecimal MAX = new BigDecimal(Integer.MAX_VALUE);
@@ -109,7 +111,7 @@ public class TS {
     }
 
     public BigDecimal profit() {
-        return getDistance().multiply(this.amount);
+        return OtherUtil.me().scale(getDistance().multiply(this.amount), 2);
     }
 
 }

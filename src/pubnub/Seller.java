@@ -37,12 +37,13 @@ public class Seller implements Runnable {
             if (order == null || order.orderId == 0) {
                 throw new Exception("order is null");
             }
+            transaction.onTransactionOrder(order);
             int retry = 0;
             boolean cancelOrder = false;
             do {
                 order = BitbankClient.me().bbR.getOrder(Config.me().getPair(), order.orderId);
                 logger.debug(order);
-                if (transaction.onTransaction(order, retry++)) {
+                if (transaction.onTransacting(order, retry++)) {
                     cancelOrder = true;
                     break;
                 }
@@ -59,7 +60,9 @@ public class Seller implements Runnable {
     }
 
     public interface KRTransaction<T> {
-        public void onSuccess(T t);
+        public void onTransactionOrder(final T t);
+
+        public void onSuccess(final T t);
 
         public void onFailed(Throwable t);
 
@@ -69,7 +72,7 @@ public class Seller implements Runnable {
          * @param times
          * @return
          */
-        public boolean onTransaction(T t, int times);
+        public boolean onTransacting(final T t, final int times);
     }
 
 }

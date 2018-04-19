@@ -14,6 +14,7 @@ import cc.Config;
 import cc.bitbank.entity.Order;
 import gui.TS;
 import gui.form.BitBankMainFrame;
+import mng.OrderManager;
 import mng.TSHandler;
 import mng.TSManager;
 import pubnub.Seller.KRTransaction;
@@ -74,18 +75,26 @@ public class TSMonitor extends BBReal {
                 final BigDecimal profit = ts.isVictory() ? ts.profit() : BigDecimal.ZERO;
                 logger.debug("{} : {} → {} | {}\t{}\t{}", DateUtil.me().format5(hoge.data.timestamp), ts.bought, hoge.data.buy, ts.getSellPrice(), ts.getDistance(), profit);
 
-                new Thread(new Seller(Config.me().getPair(), hoge.data.buy, ts.amount, new KRTransaction<Order>() {
+                new Thread(new Seller(Config.me().getPair(), /*hoge.data.buy*/ts.getSellPrice(), ts.amount, new KRTransaction<Order>() {
                     @Override
-                    public boolean onTransaction(Order t, int times) {
+                    public void onTransactionOrder(final Order order) {
+                        OrderManager.me().add(order.orderId);
+                        BitBankMainFrame.me().addOrder(order);
+                    }
+
+                    @Override
+                    public boolean onTransacting(final Order order, final int times) {
                         if (times >= 60) {
                             return true;
                         }
+                        BitBankMainFrame.me().updOrder(order);
                         OtherUtil.me().sleeeeeep(1000);
                         return false;
                     }
 
                     @Override
-                    public void onSuccess(Order t) {
+                    public void onSuccess(final Order order) {
+                        BitBankMainFrame.me().updOrder(order);
                         JOptionPane.showMessageDialog(BitBankMainFrame.me(), "TP is OK", "OK", JOptionPane.INFORMATION_MESSAGE);
                     }
 
@@ -93,6 +102,7 @@ public class TSMonitor extends BBReal {
                     public void onFailed(Throwable t) {
                         JOptionPane.showMessageDialog(BitBankMainFrame.me(), t.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                     }
+
                 })).start();
             }
         });
