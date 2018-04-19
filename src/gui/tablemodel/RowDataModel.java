@@ -44,9 +44,9 @@ public class RowDataModel extends DefaultTableModel {
             new ColumnContext("Buy-Price", BigDecimal.class, false, 100), //buy
             new ColumnContext("Profit", BigDecimal.class, false, 100), //buy
             // new ColumnContext("IfSell", BigDecimal.class, false, 100), //
-            new ColumnContext("LC", BigDecimal.class, false, 100), //
+            new ColumnContext("L/C", BigDecimal.class, false, 100), //
             new ColumnContext("LS", BigDecimal.class, false, 100), //
-            new ColumnContext("TP", BigDecimal.class, false, 100), //
+            new ColumnContext("T/P", BigDecimal.class, false, 100), //
             new ColumnContext("LastUpd", String.class, false, 120), //
     };
     private int number = 1;

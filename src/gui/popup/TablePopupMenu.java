@@ -80,12 +80,22 @@ public class TablePopupMenu extends JPopupMenu {
         {
             modifyTs = new JMenu("Edit TS");
             modifyTs.add(createJMenuItem("0.20"));
-            modifyTs.add(createJMenuItem("0.25"));
+            //modifyTs.add(createJMenuItem("0.25"));
             modifyTs.add(createJMenuItem("0.30"));
-            modifyTs.add(createJMenuItem("0.35"));
+            //modifyTs.add(createJMenuItem("0.35"));
             modifyTs.add(createJMenuItem("0.40"));
-            modifyTs.add(createJMenuItem("0.45"));
+            //modifyTs.add(createJMenuItem("0.45"));
             modifyTs.add(createJMenuItem("0.50"));
+            //modifyTs.add(createJMenuItem("0.55"));
+            modifyTs.add(createJMenuItem("0.60"));
+            //modifyTs.add(createJMenuItem("0.65"));
+            modifyTs.add(createJMenuItem("0.70"));
+            //modifyTs.add(createJMenuItem("0.75"));
+            modifyTs.add(createJMenuItem("0.80"));
+            //modifyTs.add(createJMenuItem("0.85"));
+            modifyTs.add(createJMenuItem("0.90"));
+            //modifyTs.add(createJMenuItem("0.95"));
+            modifyTs.add(createJMenuItem("1.00"));
             add(modifyTs);
         }
     }
