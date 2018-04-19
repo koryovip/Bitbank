@@ -23,12 +23,13 @@ public class RowDataModel extends DefaultTableModel {
     public static final int COL_INDEX_AMOUNT = __COL_INDEX__++;
     public static final int COL_INDEX_PRICE = __COL_INDEX__++;
     public static final int COL_INDEX_STATUS = __COL_INDEX__++;
+    public static final int COL_INDEX_DATE = __COL_INDEX__++;
     public static final int COL_INDEX_DIFF = __COL_INDEX__++;
     public static final int COL_INDEX_PROFIT = __COL_INDEX__++;
-    public static final int COL_INDEX_DATE = __COL_INDEX__++;
     // public static final int COL_INDEX_IFSELL = __COL_INDEX__++;
     public static final int COL_INDEX_LOSTCUT = __COL_INDEX__++;
     public static final int COL_INDEX_TRALINGSTOP = __COL_INDEX__++;
+    public static final int COL_INDEX_TAKEPROFIT = __COL_INDEX__++;
     public static final int COL_INDEX_LASTUPD = __COL_INDEX__++;
 
     private static final ColumnContext[] COLUMN_ARRAY = { //
@@ -39,12 +40,13 @@ public class RowDataModel extends DefaultTableModel {
             new ColumnContext("Amount", BigDecimal.class, false, 120), //
             new ColumnContext("Price", BigDecimal.class, false, 100), //
             new ColumnContext("Status", String.class, false, 150), //
+            new ColumnContext("Order Date", String.class, false, 120), // order date
             new ColumnContext("Buy-Price", BigDecimal.class, false, 100), //buy
             new ColumnContext("Profit", BigDecimal.class, false, 100), //buy
-            new ColumnContext("Date", String.class, false, 120), //
             // new ColumnContext("IfSell", BigDecimal.class, false, 100), //
-            new ColumnContext("LostCut", BigDecimal.class, false, 100), //
-            new ColumnContext("TralingStop", BigDecimal.class, false, 100), //
+            new ColumnContext("LC", BigDecimal.class, false, 100), //
+            new ColumnContext("LS", BigDecimal.class, false, 100), //
+            new ColumnContext("TP", BigDecimal.class, false, 100), //
             new ColumnContext("LastUpd", String.class, false, 120), //
     };
     private int number = 1;
@@ -63,70 +65,123 @@ public class RowDataModel extends DefaultTableModel {
 
     private final int ROUND = Config.me().getRound1();
 
-    synchronized public boolean addOrUpdRowData(final BigDecimal buy, final Order order) {
+    synchronized public void addOrderData(final Order order) {
+        Object[] obj = { number, // rownum
+                order.orderId, // orderid
+                order.pair, // pair
+                order.side, // side (buy, sell)
+                // ↑ オーダー新規時固定。
+                // ↓ オーダー発行～約定の間更新(一部約定の可能性があるため)
+                this.getAmount(order), //
+                this.getPrice(order), //
+                order.status, //
+                DateUtil.me().format2(this.getOrderDate(order)), //
+                // ↓ realtime 更新
+                BigDecimal.ZERO, // diff 現在の買い注文の最高値 - 買値
+                BigDecimal.ZERO, // profit (現在の買い注文の最高値 - 買値) × 約定数量
+                // ↓ Trailing Stop 設定した場合、realtime 更新
+                BigDecimal.ZERO, // lostcut
+                BigDecimal.ZERO, // ts
+                BigDecimal.ZERO, // tp
+                // case by case
+                DateUtil.me().format2(new Date()) // last update time
+        };
+        super.addRow(obj);
+        number++;
+    }
+
+    /**
+     * オーダー発行/キャンセル～約定の間
+     * @param order
+     */
+    synchronized public boolean updOrderData(final Order order) {
         boolean updateBalance = false;
-        boolean exists = false;
-        final BigDecimal amount = this.getAmount(order);
-        final BigDecimal price = this.getPrice(order);
         final int rowCount = super.getRowCount();
-        final BigDecimal diff = buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP);
-        final BigDecimal profit = buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP);
-        // final BigDecimal ifSell = buy.multiply(amount).divide(buy.subtract(price.subtract(buy)), ROUND, RoundingMode.HALF_UP);
-        final String orderDate = DateUtil.me().format2(this.getOrderDate(order));
         for (int index = 0; index < rowCount; index++) {
             Object orderId = super.getValueAt(index, COL_INDEX_ORDER_ID);
-            if (orderId.toString().equals(Long.toString(order.orderId))) {
-                // update
-                if (!super.getValueAt(index, COL_INDEX_STATUS).toString().equals(order.status)) {
-                    // ステータスが変化ありの場合、残高を更新
-                    System.out.println("ステータスが変化ありの場合、残高を更新:" + order.status);
-                    updateBalance = true;
-                }
-                super.setValueAt(order.status, index, COL_INDEX_STATUS);
-                if (this.canSell(index)) {
-                    super.setValueAt(diff, index, COL_INDEX_DIFF);
-                    super.setValueAt(profit, index, COL_INDEX_PROFIT);
-                }
-                super.setValueAt(orderDate, index, COL_INDEX_DATE);
-                // super.setValueAt(ifSell, index, COL_INDEX_IFSELL);
-                super.setValueAt(DateUtil.me().format2(new Date()), index, COL_INDEX_LASTUPD);
-                exists = true;
-                break;
+            if (!orderId.toString().equals(Long.toString(order.orderId))) {
+                continue;
             }
-        }
-        if (!exists) {
-            Object[] obj = { number, //
-                    order.orderId, //
-                    order.pair, //
-                    order.side, //
-                    amount, //
-                    price, //
-                    order.status, //
-                    canSell(order) ? diff : BigDecimal.ZERO, //
-                    canSell(order) ? profit : BigDecimal.ZERO, //
-                    orderDate, //
-                    // ifSell, // ifsell
-                    BigDecimal.ZERO, // lostcut
-                    BigDecimal.ZERO, //
-                    DateUtil.me().format2(new Date()) //
-            };
-            super.addRow(obj);
-            updateBalance = true;
-            number++;
+            if (!super.getValueAt(index, COL_INDEX_STATUS).toString().equals(order.status)) {
+                updateBalance = true;
+            }
+            super.setValueAt(this.getAmount(order), index, COL_INDEX_AMOUNT); // 約定した数量
+            super.setValueAt(this.getPrice(order), index, COL_INDEX_PRICE); // 平均取得価格（成行の場合）
+            super.setValueAt(order.status, index, COL_INDEX_STATUS);
+            super.setValueAt(DateUtil.me().format2(this.getOrderDate(order)), index, COL_INDEX_DATE);
+            super.setValueAt(DateUtil.me().format2(new Date()), index, COL_INDEX_LASTUPD);
         }
         return updateBalance;
     }
 
+    //    synchronized public boolean addOrUpdRowData(final Order order) {
+    //        boolean updateBalance = false;
+    //        boolean exists = false;
+    //        final BigDecimal amount = this.getAmount(order);
+    //        final BigDecimal price = this.getPrice(order);
+    //        final int rowCount = super.getRowCount();
+    //        //final BigDecimal diff = buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP);
+    //        //final BigDecimal profit = buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP);
+    //        // final BigDecimal ifSell = buy.multiply(amount).divide(buy.subtract(price.subtract(buy)), ROUND, RoundingMode.HALF_UP);
+    //        final String orderDate = DateUtil.me().format2(this.getOrderDate(order));
+    //        for (int index = 0; index < rowCount; index++) {
+    //            Object orderId = super.getValueAt(index, COL_INDEX_ORDER_ID);
+    //            if (!orderId.toString().equals(Long.toString(order.orderId))) {
+    //                continue;
+    //            }
+    //            exists = true;
+    //            // update
+    //            if (!super.getValueAt(index, COL_INDEX_STATUS).toString().equals(order.status)) {
+    //                // ステータスが変化ありの場合、残高を更新
+    //                System.out.println("ステータスが変化ありの場合、残高を更新:" + order.status);
+    //                updateBalance = true;
+    //            }
+    //            super.setValueAt(order.status, index, COL_INDEX_STATUS);
+    //            {
+    //                // -で初期化
+    //                super.setValueAt(BigDecimal.ZERO, index, COL_INDEX_DIFF);
+    //                super.setValueAt(BigDecimal.ZERO, index, COL_INDEX_PROFIT);
+    //            }
+    //            super.setValueAt(orderDate, index, COL_INDEX_DATE);
+    //            // super.setValueAt(ifSell, index, COL_INDEX_IFSELL);
+    //            super.setValueAt(DateUtil.me().format2(new Date()), index, COL_INDEX_LASTUPD);
+    //            break;
+    //        }
+    //        if (!exists) {
+    //            Object[] obj = { number, // rownum
+    //                    order.orderId, // orderid
+    //                    order.pair, // pair
+    //                    order.side, // side (buy, sell)
+    //                    amount, //
+    //                    price, //
+    //                    order.status, //
+    //                    BigDecimal.ZERO, // diff
+    //                    BigDecimal.ZERO, // profit
+    //                    orderDate, //
+    //                    // ifSell, // ifsell
+    //                    BigDecimal.ZERO, // lostcut
+    //                    BigDecimal.ZERO, // tp
+    //                    DateUtil.me().format2(new Date()) // last update time
+    //            };
+    //            super.addRow(obj);
+    //            updateBalance = true;
+    //            number++;
+    //        }
+    //        return updateBalance;
+    //    }
+
     synchronized public void updRowData(final pubnub.json.ticker.Message hoge) {
         final int rowCount = super.getRowCount();
         for (int index = 0; index < rowCount; index++) {
-            final BigDecimal price = getAveragePrice(index);
-            final BigDecimal amount = getExecutedAmount(index);
-            final BigDecimal diff = hoge.data.buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP);
-            super.setValueAt(diff, index, COL_INDEX_DIFF);
+            if (this.canSell(index)) {
+                final BigDecimal price = getAveragePrice(index);
+                final BigDecimal amount = getExecutedAmount(index);
+                final BigDecimal diff = hoge.data.buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP);
+                super.setValueAt(diff, index, COL_INDEX_DIFF);
 
-            final BigDecimal profit = hoge.data.buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP);
-            super.setValueAt(profit, index, COL_INDEX_PROFIT);
+                final BigDecimal profit = hoge.data.buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP);
+                super.setValueAt(profit, index, COL_INDEX_PROFIT);
+            }
 
             super.setValueAt(DateUtil.me().format2(hoge.data.timestamp), index, COL_INDEX_LASTUPD);
         }
@@ -141,6 +196,8 @@ public class RowDataModel extends DefaultTableModel {
                 continue;
             }
 
+            super.setValueAt(ts.tralingStop, index, COL_INDEX_TRALINGSTOP);
+
             if (ts.onSelling()) {
                 super.setValueAt("On Selling", index, COL_INDEX_LOSTCUT);
             } else {
@@ -148,9 +205,9 @@ public class RowDataModel extends DefaultTableModel {
             }
 
             if (ts.isVictory()) {
-                super.setValueAt(ts.profit(), index, COL_INDEX_TRALINGSTOP);
+                super.setValueAt(ts.profit(), index, COL_INDEX_TAKEPROFIT);
             } else {
-                super.setValueAt(ts.getDistance(), index, COL_INDEX_TRALINGSTOP);
+                super.setValueAt(ts.getDistance(), index, COL_INDEX_TAKEPROFIT);
             }
         }
     }
@@ -188,6 +245,15 @@ public class RowDataModel extends DefaultTableModel {
 
     final private boolean canSell(String status) {
         return "FULLY_FILLED".equals(status) || "PARTIALLY_FILLED".equals(status);
+    }
+
+    final public boolean watch(int rowIndex) {
+        String status = super.getValueAt(rowIndex, COL_INDEX_STATUS).toString();
+        return watch(status);
+    }
+
+    final public boolean watch(String status) {
+        return "UNFILLED".equals(status) || "PARTIALLY_FILLED".equals(status);
     }
 
     final public boolean canSetTC(int rowIndex) {

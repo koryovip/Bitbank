@@ -19,11 +19,13 @@ public class Seller implements Runnable {
     private final CurrencyPair pair;
     private final BigDecimal price;
     private final BigDecimal amount;
+    private final KRTransaction<Order> transaction;
 
-    public Seller(final CurrencyPair pair, final BigDecimal price, final BigDecimal amount) {
+    public Seller(final CurrencyPair pair, final BigDecimal price, final BigDecimal amount, final KRTransaction<Order> transaction) {
         this.pair = pair;
         this.price = price;
         this.amount = amount;
+        this.transaction = transaction;
     }
 
     @Override
@@ -31,25 +33,43 @@ public class Seller implements Runnable {
         logger.debug("sell(MARKET):{} at {}", amount, price);
         try {
             Order order = BitbankClient.me().bbW.sendOrder(pair, price, amount, OrderSide.SELL, OrderType.LIMIT);
-            System.out.println(order);
+            logger.debug(order);
             if (order == null || order.orderId == 0) {
                 throw new Exception("order is null");
             }
+            int retry = 0;
+            boolean cancelOrder = false;
             do {
                 order = BitbankClient.me().bbR.getOrder(Config.me().getPair(), order.orderId);
-                System.out.println(order);
-                sleeeeeep(1000);
+                logger.debug(order);
+                if (transaction.onTransaction(order, retry++)) {
+                    cancelOrder = true;
+                    break;
+                }
             } while (!order.status.equals("FULLY_FILLED"));
+            if (cancelOrder) {
+                // TODO 画面にメッセージ表示？
+            } else {
+                transaction.onSuccess(order);
+            }
         } catch (Exception e) {
             e.printStackTrace();
+            transaction.onFailed(e);
         }
     }
 
-    private void sleeeeeep(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    public interface KRTransaction<T> {
+        public void onSuccess(T t);
+
+        public void onFailed(Throwable t);
+
+        /**
+         * オーダーの約定を諦める場合、trueを返す
+         * @param t
+         * @param times
+         * @return
+         */
+        public boolean onTransaction(T t, int times);
     }
+
 }
