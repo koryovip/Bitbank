@@ -25,7 +25,11 @@ public class StripeTableRenderer extends DefaultTableCellRenderer {
         if (isNumber) {
             Number n = (Number) value;
             if (n.doubleValue() < 0) {
-                setForeground(Color.RED);
+                if (isSelected) {
+                    setForeground(Color.YELLOW);
+                } else {
+                    setForeground(Color.RED);
+                }
             } else {
                 //setForeground(table.getSelectionForeground());
             }
