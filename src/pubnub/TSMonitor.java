@@ -1,6 +1,8 @@
 package pubnub;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.JOptionPane;
 
@@ -31,9 +33,22 @@ public class TSMonitor extends BBReal {
     }
 
     @Override
-    protected void onMessage(PubNub pubnub, PNMessageResult message, pubnub.json.candlestick.Message hoge) {
-        // System.out.println(hoge.datetime(hoge.type1min()));
-        // System.out.println(message);
+    protected List<String> channels() {
+        final String pair = Config.me().getPair().getCode();
+        return Arrays.asList(super.getFullChannelName(KRPubNubChannel.ticker, pair) //
+//                , super.getFullChannelName(KRPubNubChannels.depth, pair) //
+//                , super.getFullChannelName(KRPubNubChannels.transactions, pair) //
+        );
+    }
+
+    @Override
+    protected void onMessage(PubNub pubnub, PNMessageResult message, pubnub.json.depth.Message hoge) {
+        System.out.println(message);
+    }
+
+    @Override
+    protected void onMessage(PubNub pubnub, PNMessageResult message, pubnub.json.transactions.Message hoge) {
+        System.out.println(message);
     }
 
     private boolean doUpdate(final pubnub.json.ticker.Message hoge) {
