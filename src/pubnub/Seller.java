@@ -33,10 +33,10 @@ public class Seller implements Runnable {
         logger.debug("sell(MARKET):{} at {}", amount, price);
         try {
             Order order = BitbankClient.me().bbW.sendOrder(pair, price, amount, OrderSide.SELL, OrderType.LIMIT);
-            logger.debug(order);
             if (order == null || order.orderId == 0) {
                 throw new Exception("order is null");
             }
+            logger.debug(order);
             transaction.onTransactionOrder(order);
             int retry = 0;
             boolean cancelOrder = false;

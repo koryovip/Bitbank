@@ -43,6 +43,7 @@ import gui.popup.TablePopupMenu;
 import gui.renderer.StripeTableRenderer;
 import gui.tablemodel.RowDataModel;
 import mng.OrderManager;
+import mng.TSManager;
 import pubnub.TSMonitor;
 import pubnub.TSMonitorUpdater;
 import utils.BitbankClient;
@@ -98,7 +99,7 @@ public class BitBankMainFrame extends JPanel {
     private BitBankMainFrame() {
         setLayout(null);
         setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-        setPreferredSize(new Dimension(1300, 480));
+        setPreferredSize(new Dimension(1400, 480));
 
         initGUI();
 
@@ -283,17 +284,23 @@ public class BitBankMainFrame extends JPanel {
                     }
                     try {
                         BigDecimal price = buy;
-                        BigDecimal amount = model.getExecutedAmount(selectedRowIndex);
+                        final long orderIdBought = model.getOrderId(selectedRowIndex);
+                        final BigDecimal amount = model.getExecutedAmount(selectedRowIndex);
                         logger.debug("sell:" + price.toPlainString() + ", amount:" + amount.toPlainString());
                         final Order order = BitbankClient.me().bbW.sendOrder(Config.me().getPair(), price, amount, OrderSide.SELL, OrderType.LIMIT);
                         if (order == null || order.orderId == 0) {
-                            throw new Exception("Order Failed!");
+                            throw new Exception("Sell Order Failed!");
                         }
-                        OrderManager.me().add(order.orderId);
-
                         logger.debug(order);
+
+                        final long orderId = order.orderId;
+                        OrderManager.me().add(orderId);
                         model.addOrderData(order);
 
+                        // 選択したオーダーのTSを外す
+                        if (TSManager.me().remove(orderIdBought)) {
+                            model.resetRowDataTS(orderIdBought);
+                        }
                         updateXRPBalance();
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -321,7 +328,7 @@ public class BitBankMainFrame extends JPanel {
                     try {
                         Order order = BitbankClient.me().bbW.cancelOrder(Config.me().getPair(), orderId);
                         if (order == null || order.orderId == 0) {
-                            throw new Exception("Order Failed!");
+                            throw new Exception("Cancel Order Failed!");
                         }
                         logger.debug(order);
                         model.updOrderData(order);
@@ -470,5 +477,9 @@ public class BitBankMainFrame extends JPanel {
 
     final public void updOrder(Order order) {
         model.updOrderData(order);
+    }
+
+    final public void resetRowDataTS(Order order) {
+        model.resetRowDataTS(order.orderId);
     }
 }

@@ -6,11 +6,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import javax.swing.AbstractAction;
+import javax.swing.ButtonGroup;
 import javax.swing.JDialog;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JTable;
 
 import cc.Config;
@@ -78,24 +80,21 @@ public class TablePopupMenu extends JPopupMenu {
             });
         }
         {
-            modifyTs = new JMenu("Edit TS");
-            modifyTs.add(createJMenuItem("0.20"));
-            //modifyTs.add(createJMenuItem("0.25"));
-            modifyTs.add(createJMenuItem("0.30"));
-            //modifyTs.add(createJMenuItem("0.35"));
-            modifyTs.add(createJMenuItem("0.40"));
-            //modifyTs.add(createJMenuItem("0.45"));
-            modifyTs.add(createJMenuItem("0.50"));
-            //modifyTs.add(createJMenuItem("0.55"));
-            modifyTs.add(createJMenuItem("0.60"));
-            //modifyTs.add(createJMenuItem("0.65"));
-            modifyTs.add(createJMenuItem("0.70"));
-            //modifyTs.add(createJMenuItem("0.75"));
-            modifyTs.add(createJMenuItem("0.80"));
-            //modifyTs.add(createJMenuItem("0.85"));
-            modifyTs.add(createJMenuItem("0.90"));
-            //modifyTs.add(createJMenuItem("0.95"));
-            modifyTs.add(createJMenuItem("1.00"));
+            ButtonGroup group = new ButtonGroup();
+            modifyTs = new JMenu("Change TS");
+            group.add(modifyTs.add(this.createJMenuItem("none", BigDecimal.ZERO)));
+            modifyTs.addSeparator();
+            group.add(modifyTs.add(this.createJMenuItem("0.2")));
+            group.add(modifyTs.add(this.createJMenuItem("0.3")));
+            group.add(modifyTs.add(this.createJMenuItem("0.4")));
+            group.add(modifyTs.add(this.createJMenuItem("0.5")));
+            group.add(modifyTs.add(this.createJMenuItem("0.6")));
+            group.add(modifyTs.add(this.createJMenuItem("0.7")));
+            group.add(modifyTs.add(this.createJMenuItem("0.8")));
+            group.add(modifyTs.add(this.createJMenuItem("0.9")));
+            group.add(modifyTs.add(this.createJMenuItem("1.0")));
+            modifyTs.addSeparator();
+            modifyTs.add(this.createJMenuItem2("custom"));
             add(modifyTs);
         }
     }
@@ -114,12 +113,41 @@ public class TablePopupMenu extends JPopupMenu {
     }
 
     private JMenuItem createJMenuItem(String value) {
-        JMenuItem ts1 = new JMenuItem(new ModifyTsAction(new BigDecimal(value)));
-        ts1.setText(value);
+        return createJMenuItem(value, new BigDecimal(value));
+    }
+
+    private JMenuItem createJMenuItem(String text, BigDecimal value) {
+        JMenuItem ts1 = new JRadioButtonMenuItem(new ModifyTsAction(value));
+        ts1.setText(text);
         return ts1;
     }
 
-    class ModifyTsAction extends AbstractAction {
+    private JMenuItem createJMenuItem2(String text) {
+        JMenuItem ts1 = new JMenuItem(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                String value = JOptionPane.showInputDialog(BitBankMainFrame.me(), "TPの値を入力してください：");
+                if (value == null) {
+                    return;
+                }
+                if (value.trim().length() <= 0) {
+                    return;
+                }
+                final BigDecimal vv;
+                try {
+                    vv = new BigDecimal(value);
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(BitBankMainFrame.me(), value, "値不正", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                new ModifyTsAction(vv).actionPerformed(event);
+            }
+        });
+        ts1.setText(text);
+        return ts1;
+    }
+
+    public class ModifyTsAction extends AbstractAction {
         private static final long serialVersionUID = -660393676870756452L;
 
         private final BigDecimal value;
@@ -136,9 +164,15 @@ public class TablePopupMenu extends JPopupMenu {
             RowDataModel model = (RowDataModel) table.getModel();
             for (int rowIndex : table.getSelectedRows()) {
                 final long orderId = model.getOrderId(rowIndex);
-                final BigDecimal averagePrice = model.getAveragePrice(rowIndex);
-                final BigDecimal executedAmount = model.getExecutedAmount(rowIndex);
-                TSManager.me().addOrUpdate(orderId, averagePrice, executedAmount, defaultLostCut, this.value);
+                if (this.value.compareTo(BigDecimal.ZERO) <= 0) {
+                    if (TSManager.me().remove(orderId)) {
+                        model.resetRowDataTS(orderId);
+                    }
+                } else {
+                    final BigDecimal averagePrice = model.getAveragePrice(rowIndex);
+                    final BigDecimal executedAmount = model.getExecutedAmount(rowIndex);
+                    TSManager.me().addOrUpdate(orderId, averagePrice, executedAmount, defaultLostCut, this.value);
+                }
             }
         }
     }

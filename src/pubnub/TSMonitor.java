@@ -95,6 +95,9 @@ public class TSMonitor extends BBReal {
                     @Override
                     public void onSuccess(final Order order) {
                         BitBankMainFrame.me().updOrder(order);
+                        if (TSManager.me().remove(order.orderId)) {
+                            BitBankMainFrame.me().resetRowDataTS(order);
+                        }
                         JOptionPane.showMessageDialog(BitBankMainFrame.me(), "TP is OK", "OK", JOptionPane.INFORMATION_MESSAGE);
                     }
 

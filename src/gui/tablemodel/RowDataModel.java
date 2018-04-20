@@ -10,6 +10,7 @@ import javax.swing.table.TableColumnModel;
 
 import cc.Config;
 import cc.bitbank.entity.Order;
+import cc.bitbank.entity.enums.OrderSide;
 import gui.TS;
 import utils.DateUtil;
 
@@ -174,15 +175,16 @@ public class RowDataModel extends DefaultTableModel {
     synchronized public void updRowData(final pubnub.json.ticker.Message hoge) {
         final int rowCount = super.getRowCount();
         for (int index = 0; index < rowCount; index++) {
-            if (this.canSell(index)) {
-                final BigDecimal price = getAveragePrice(index);
-                final BigDecimal amount = getExecutedAmount(index);
-                final BigDecimal diff = hoge.data.buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP);
-                super.setValueAt(diff, index, COL_INDEX_DIFF);
-
-                final BigDecimal profit = hoge.data.buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP);
-                super.setValueAt(profit, index, COL_INDEX_PROFIT);
+            if (!this.canSell(index)) {
+                continue;
             }
+            final BigDecimal price = getAveragePrice(index);
+            final BigDecimal amount = getExecutedAmount(index);
+            final BigDecimal diff = hoge.data.buy.subtract(price).setScale(ROUND, RoundingMode.HALF_UP);
+            final BigDecimal profit = hoge.data.buy.subtract(price).multiply(amount).setScale(ROUND, RoundingMode.HALF_UP);
+
+            super.setValueAt(diff, index, COL_INDEX_DIFF);
+            super.setValueAt(profit, index, COL_INDEX_PROFIT);
 
             super.setValueAt(DateUtil.me().format2(hoge.data.timestamp), index, COL_INDEX_LASTUPD);
         }
@@ -193,7 +195,7 @@ public class RowDataModel extends DefaultTableModel {
         final int round = Config.me().getRoundCurrencyPair();
         for (int index = 0; index < rowCount; index++) {
             Object orderId = super.getValueAt(index, COL_INDEX_ORDER_ID);
-            if (!orderId.toString().equals(Long.toString(ts.orderId))) {
+            if (ts.orderId != Long.valueOf(orderId.toString())) {
                 continue;
             }
 
@@ -210,6 +212,21 @@ public class RowDataModel extends DefaultTableModel {
             } else {
                 super.setValueAt(ts.getDistance(), index, COL_INDEX_TAKEPROFIT);
             }
+            break;
+        }
+    }
+
+    synchronized public void resetRowDataTS(final long orderIdTS) {
+        final int rowCount = super.getRowCount();
+        for (int index = 0; index < rowCount; index++) {
+            Object orderId = super.getValueAt(index, COL_INDEX_ORDER_ID);
+            if (orderIdTS != Long.valueOf(orderId.toString())) {
+                continue;
+            }
+            super.setValueAt(BigDecimal.ZERO, index, COL_INDEX_LOSTCUT);
+            super.setValueAt(BigDecimal.ZERO, index, COL_INDEX_TRALINGSTOP);
+            super.setValueAt(BigDecimal.ZERO, index, COL_INDEX_TAKEPROFIT);
+            break;
         }
     }
 
@@ -236,16 +253,18 @@ public class RowDataModel extends DefaultTableModel {
      * @return
      */
     final public boolean canSell(int rowIndex) {
+        OrderSide side = (OrderSide) super.getValueAt(rowIndex, COL_INDEX_SIDE);
         String status = super.getValueAt(rowIndex, COL_INDEX_STATUS).toString();
-        return canSell(status);
+        return canSell(side, status);
     }
 
     final public boolean canSell(Order order) {
-        return canSell(order.status);
+        return canSell(order.side, order.status);
     }
 
-    final private boolean canSell(String status) {
-        return "FULLY_FILLED".equals(status) || "PARTIALLY_FILLED".equals(status);
+    final private boolean canSell(OrderSide side, String status) {
+        return side == OrderSide.BUY //
+                && ("FULLY_FILLED".equals(status) || "PARTIALLY_FILLED".equals(status));
     }
 
     final public boolean watch(int rowIndex) {

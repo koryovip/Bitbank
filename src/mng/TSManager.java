@@ -2,6 +2,7 @@ package mng;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
@@ -34,6 +35,19 @@ public class TSManager {
         TS ts = new TS(orderId, bought, amount, lostCut, tralingStop);
         this.tsList.add(ts);
         return ts;
+    }
+
+    final synchronized public boolean remove(final long orderId) {
+        Iterator<TS> it = tsList.iterator();
+        while (it.hasNext()) {
+            TS ts = it.next();
+            if (orderId == ts.orderId) {
+                it.remove();
+                logger.debug("TS removed:" + orderId);
+                return true;
+            }
+        }
+        return false;
     }
 
     final public int size() {
