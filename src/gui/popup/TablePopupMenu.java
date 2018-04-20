@@ -20,6 +20,7 @@ import gui.form.BitBankMainFrame;
 import gui.form.SetupDialog;
 import gui.tablemodel.RowDataModel;
 import mng.TSManager;
+import utils.StringUtilsKR;
 
 public class TablePopupMenu extends JPopupMenu {
     private static final long serialVersionUID = -8857893357535730207L;
@@ -124,23 +125,22 @@ public class TablePopupMenu extends JPopupMenu {
 
     private JMenuItem createJMenuItem2(String text) {
         JMenuItem ts1 = new JMenuItem(new AbstractAction() {
+            private static final long serialVersionUID = 1516788165956125322L;
+
             @Override
             public void actionPerformed(ActionEvent event) {
-                String value = JOptionPane.showInputDialog(BitBankMainFrame.me(), "TPの値を入力してください：");
-                if (value == null) {
+                String input = JOptionPane.showInputDialog(BitBankMainFrame.me(), "TPの値を入力してください：");
+                if (StringUtilsKR.me().isStrBlank(input, true)) {
                     return;
                 }
-                if (value.trim().length() <= 0) {
-                    return;
-                }
-                final BigDecimal vv;
+                final BigDecimal value;
                 try {
-                    vv = new BigDecimal(value);
+                    value = new BigDecimal(input);
                 } catch (Exception e) {
-                    JOptionPane.showMessageDialog(BitBankMainFrame.me(), value, "値不正", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(BitBankMainFrame.me(), input, "値不正", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                new ModifyTsAction(vv).actionPerformed(event);
+                new ModifyTsAction(value).actionPerformed(event);
             }
         });
         ts1.setText(text);
@@ -163,6 +163,9 @@ public class TablePopupMenu extends JPopupMenu {
             JTable table = (JTable) getInvoker();
             RowDataModel model = (RowDataModel) table.getModel();
             for (int rowIndex : table.getSelectedRows()) {
+                if (!model.canSell(rowIndex)) {
+                    continue;
+                }
                 final long orderId = model.getOrderId(rowIndex);
                 if (this.value.compareTo(BigDecimal.ZERO) <= 0) {
                     if (TSManager.me().remove(orderId)) {

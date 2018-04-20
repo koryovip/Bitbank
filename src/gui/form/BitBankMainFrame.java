@@ -103,7 +103,7 @@ public class BitBankMainFrame extends JPanel {
 
         initGUI();
 
-        initOrderList();
+        initOrderList(false);
 
         updateXRPBalance();
         // update(3, 3);
@@ -341,9 +341,56 @@ public class BitBankMainFrame extends JPanel {
             });
             add(btn);
         }
+        /*
+        {
+            JButton btn = new JButton("Add Order");
+            btn.setFont(font14);
+            btn.setBounds(1200, 440, 160, tableRowHight);
+            btn.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent event) {
+                    String input = JOptionPane.showInputDialog(BitBankMainFrame.me(), "OrderIDを入力してください：");
+                    if (StringUtilsKR.me().isStrBlank(input, true)) {
+                        return;
+                    }
+                    Long orderId;
+                    try {
+                        orderId = new Long(input);
+                    } catch (Exception e) {
+                        JOptionPane.showMessageDialog(BitBankMainFrame.me(), input, "値不正", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+                    OrderManager.me().add(orderId);
+                    Order dummyOrder = new Order();
+                    dummyOrder.orderId = orderId;
+                    dummyOrder.pair = Config.me().getPair().getCode();
+                    dummyOrder.side = OrderSide.SELL;
+                    dummyOrder.startAmount = BigDecimal.ZERO;
+                    dummyOrder.price = BigDecimal.ZERO;
+                    dummyOrder.status = "UNFILLED";
+                    dummyOrder.orderedAt = new Date();
+        
+                    model.addOrderData(dummyOrder);
+                }
+            });
+            add(btn);
+        }
+        */
+        {
+            JButton btn = new JButton("Reload");
+            btn.setFont(font14);
+            btn.setBounds(1200, 440, 100, tableRowHight);
+            btn.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent event) {
+                    initOrderList(true);
+                }
+            });
+            add(btn);
+        }
     }
 
-    private void initOrderList() {
+    private void initOrderList(boolean reload) {
         try {
             // 未約定のオーダーを取得
             {
@@ -361,12 +408,13 @@ public class BitBankMainFrame extends JPanel {
                     return;
                 }
                 final Orders orders = BitbankClient.me().bbR.getOrders(Config.me().getPair(), OrderManager.me().getOrderIds());
+                model.clear();
                 for (final Order order : orders.orders) {
                     model.addOrderData(order);
                 }
             }
             // オーダー監視
-            {
+            if (!reload) {
                 ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
                 service.scheduleWithFixedDelay(() -> {
                     try {
@@ -410,26 +458,8 @@ public class BitBankMainFrame extends JPanel {
         }
     }
 
-    private void update(final long delay1, final long delay2) {
-        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-        service.scheduleWithFixedDelay(() -> {
-            try {
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }, 0, delay1, TimeUnit.SECONDS);
-    }
-
-    boolean isUpdatingBalance = false;
-
     synchronized final private void updateXRPBalance() {
-        if (isUpdatingBalance) {
-            logger.debug("Balance更新中");
-            return;
-        }
         try {
-            isUpdatingBalance = true;
             //            logger.debug("isUpdatingBalance:" + isUpdatingBalance);
             Assets assets = BitbankClient.me().bbR.getAsset();
             /*
@@ -454,7 +484,6 @@ public class BitBankMainFrame extends JPanel {
         } catch (BitbankException | IOException e) {
             e.printStackTrace();
         } finally {
-            isUpdatingBalance = false;
             //            logger.debug("isUpdatingBalance:" + isUpdatingBalance);
         }
         //        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();

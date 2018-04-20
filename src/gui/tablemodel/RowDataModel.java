@@ -106,6 +106,11 @@ public class RowDataModel extends DefaultTableModel {
             if (!super.getValueAt(index, COL_INDEX_STATUS).toString().equals(order.status)) {
                 updateBalance = true;
             }
+            // 固定のはずだが、一応更新
+            super.setValueAt(order.orderId, index, COL_INDEX_ORDER_ID); //
+            super.setValueAt(order.pair, index, COL_INDEX_PAIR); //
+            super.setValueAt(order.side, index, COL_INDEX_SIDE); //
+            // リアルに変わる
             super.setValueAt(this.getAmount(order), index, COL_INDEX_AMOUNT); // 約定した数量
             super.setValueAt(this.getPrice(order), index, COL_INDEX_PRICE); // 平均取得価格（成行の場合）
             super.setValueAt(order.status, index, COL_INDEX_STATUS);
@@ -228,6 +233,11 @@ public class RowDataModel extends DefaultTableModel {
             super.setValueAt(BigDecimal.ZERO, index, COL_INDEX_TAKEPROFIT);
             break;
         }
+    }
+
+    synchronized public final void clear() {
+        this.number = 1;
+        super.setRowCount(0);
     }
 
     public Date getOrderDate(Order order) {
