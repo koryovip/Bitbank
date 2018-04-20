@@ -13,6 +13,7 @@ import cc.bitbank.entity.Order;
 import cc.bitbank.entity.enums.OrderSide;
 import gui.TS;
 import utils.DateUtil;
+import utils.OtherUtil;
 
 public class RowDataModel extends DefaultTableModel {
     private static final long serialVersionUID = -813484403607557100L;
@@ -21,6 +22,7 @@ public class RowDataModel extends DefaultTableModel {
     public static final int COL_INDEX_ORDER_ID = __COL_INDEX__++;
     public static final int COL_INDEX_PAIR = __COL_INDEX__++;
     public static final int COL_INDEX_SIDE = __COL_INDEX__++;
+    public static final int COL_INDEX_EXECD_AMOUNT = __COL_INDEX__++;
     public static final int COL_INDEX_AMOUNT = __COL_INDEX__++;
     public static final int COL_INDEX_PRICE = __COL_INDEX__++;
     public static final int COL_INDEX_STATUS = __COL_INDEX__++;
@@ -38,6 +40,7 @@ public class RowDataModel extends DefaultTableModel {
             new ColumnContext("OrderId", Long.class, false, 100), //
             new ColumnContext("Pair", String.class, false, 80), //
             new ColumnContext("Side", String.class, false, 60), //
+            new ColumnContext("Executed Amount", BigDecimal.class, false, 120), //
             new ColumnContext("Amount", BigDecimal.class, false, 120), //
             new ColumnContext("Price", BigDecimal.class, false, 100), //
             new ColumnContext("Status", String.class, false, 150), //
@@ -73,7 +76,8 @@ public class RowDataModel extends DefaultTableModel {
                 order.side, // side (buy, sell)
                 // ↑ オーダー新規時固定。
                 // ↓ オーダー発行～約定の間更新(一部約定の可能性があるため)
-                this.getAmount(order), //
+                OtherUtil.me().scale(order.executedAmount, Config.me().getRoundCurrencyPairAmount()), //
+                OtherUtil.me().scale(this.getAmount(order), Config.me().getRoundCurrencyPairAmount()), //
                 this.getPrice(order), //
                 order.status, //
                 DateUtil.me().format2(this.getOrderDate(order)), //
@@ -111,7 +115,7 @@ public class RowDataModel extends DefaultTableModel {
             super.setValueAt(order.pair, index, COL_INDEX_PAIR); //
             super.setValueAt(order.side, index, COL_INDEX_SIDE); //
             // リアルに変わる
-            super.setValueAt(this.getAmount(order), index, COL_INDEX_AMOUNT); // 約定した数量
+            super.setValueAt(OtherUtil.me().scale(order.executedAmount, Config.me().getRoundCurrencyPairAmount()), index, COL_INDEX_EXECD_AMOUNT); // 約定した数量
             super.setValueAt(this.getPrice(order), index, COL_INDEX_PRICE); // 平均取得価格（成行の場合）
             super.setValueAt(order.status, index, COL_INDEX_STATUS);
             super.setValueAt(DateUtil.me().format2(this.getOrderDate(order)), index, COL_INDEX_DATE);

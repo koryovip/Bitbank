@@ -21,6 +21,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
@@ -46,6 +47,8 @@ import mng.OrderManager;
 import mng.TSManager;
 import pubnub.TSMonitor;
 import pubnub.TSMonitorUpdater;
+import pubnub.TransMonitor;
+import pubnub.TransMonitorUpdater;
 import utils.BitbankClient;
 import utils.DateUtil;
 import utils.OtherUtil;
@@ -76,30 +79,34 @@ public class BitBankMainFrame extends JPanel {
         return singleton;
     }
 
-    JLabel time = new JLabel();
-    JLabel jpyBalance = new JLabel();
-    JLabel btcBalance = new JLabel();
-    JLabel xrpBalance = new JLabel();
-    JLabel sellXRP = new JLabel();
-    JLabel sellXRPVo = new JLabel();
-    JLabel buyXRP = new JLabel();
-    JLabel buyXRPVo = new JLabel();
+    private BigDecimal buyNOW = new BigDecimal(-1);
+    private BigDecimal sellNOW = new BigDecimal(-1);
 
-    JLabel sellBTC = new JLabel();
-    JLabel stop = new JLabel();
-    JLabel profit = new JLabel();
-    JLabel profit2 = new JLabel();
-    BigDecimal buy = new BigDecimal(-1);
-    BigDecimal sell = new BigDecimal(-1);
-    BigDecimal stopValue = new BigDecimal(0);
-    BigDecimal stopFix = new BigDecimal(3000);
-    BigDecimal buyPrice = new BigDecimal(982000L);
-    BigDecimal amount = new BigDecimal(0.2037);
+    private final JLabel time = new JLabel();
+    private final JLabel jpyBalance = new JLabel();
+    private final JLabel btcBalance = new JLabel();
+    private final JLabel xrpBalance = new JLabel();
+    private final JLabel sellXRP = new JLabel();
+    private final JLabel sellXRPVo = new JLabel();
+    private final JLabel buyXRP = new JLabel();
+    private final JLabel buyXRPVo = new JLabel();
+
+    //    private final JLabel sellBTC = new JLabel();
+    //    private final JLabel stop = new JLabel();
+    //    private final JLabel profit = new JLabel();
+    //    private final JLabel profit2 = new JLabel();
+
+    // transaction monitor
+    private final JLabel buyCountLbl = new JLabel();
+    private final JLabel buyTotalLbl = new JLabel();
+    private final JLabel sellCountLbl = new JLabel();
+    private final JLabel sellTotalLbl = new JLabel();
+    private final JProgressBar buySellPower = new JProgressBar(0, 100);
 
     private BitBankMainFrame() {
         setLayout(null);
         setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-        setPreferredSize(new Dimension(1400, 480));
+        setPreferredSize(new Dimension(1500, 480));
 
         initGUI();
 
@@ -108,18 +115,23 @@ public class BitBankMainFrame extends JPanel {
         updateXRPBalance();
         // update(3, 3);
 
+        monitor1Start();
+        monitor2Start();
+    }
+
+    private void monitor1Start() {
         TSMonitor monitor = new TSMonitor(new TSMonitorUpdater() {
             @Override
             public boolean update(final pubnub.json.ticker.Message hoge) {
-                sell = hoge.data.sell;
-                buy = hoge.data.buy;
+                sellNOW = hoge.data.sell;
+                buyNOW = hoge.data.buy;
 
                 time.setText(DateUtil.me().format1(hoge.data.timestamp));
 
                 final String sellPrice = hoge.data.sell.toPlainString();
                 updateWIndowTitlen(sellPrice);
                 sellXRP.setText(sellPrice);
-                sellXRPVo.setText(hoge.data.vol.toPlainString()); // TODO from 板情報: depth_btc_jpy
+                // sellXRPVo.setText(hoge.data.vol.toPlainString()); // TODO from 板情報: depth_btc_jpy
 
                 buyXRP.setText(hoge.data.buy.toPlainString());
 
@@ -137,75 +149,77 @@ public class BitBankMainFrame extends JPanel {
         monitor.monitor();
     }
 
+    private void monitor2Start() {
+        TransMonitor monitor = new TransMonitor(new TransMonitorUpdater() {
+            @Override
+            public boolean update(final long buyCount, final BigDecimal buyTotal, final long sellCount, final BigDecimal sellTotal) {
+                buyCountLbl.setText(Long.toString(buyCount));
+                buyTotalLbl.setText(OtherUtil.me().scale(buyTotal, 1).toString());
+                sellCountLbl.setText(Long.toString(sellCount));
+                sellTotalLbl.setText(OtherUtil.me().scale(sellTotal, 1).toString());
+                buySellPower.setValue(OtherUtil.me().persent(buyTotal, sellTotal).intValue());
+                return false;
+            }
+        });
+        monitor.monitor();
+    }
+
     private void initGUI() {
         int w1 = 100;
-        time.setBounds(10, 10, 300, 20);
+        final int y1 = 10;
+        final int y2 = 40;
+        final int y3 = 70;
+        time.setBounds(10, y1, 300, 20);
         add(time);
 
-        jpyBalance.setBounds(310, 10, 300, 20);
+        jpyBalance.setBounds(310, y1, 300, 20);
         add(jpyBalance);
-        btcBalance.setBounds(310, 40, 300, 20);
+        btcBalance.setBounds(310, y2, 300, 20);
         add(btcBalance);
-        xrpBalance.setBounds(310, 70, 300, 20);
+        xrpBalance.setBounds(310, y3, 300, 20);
         add(xrpBalance);
 
         {
-            sellXRP.setBounds(10, 40, w1, 20);
-            sellXRP.setHorizontalTextPosition(SwingConstants.RIGHT);
-            sellXRP.setForeground(Color.PINK);
-            add(sellXRP);
-            //////
-            sellXRPVo.setBounds(10, 70, w1 * 3, 20);
-            sellXRPVo.setHorizontalTextPosition(SwingConstants.RIGHT);
-            sellXRPVo.setForeground(Color.WHITE);
-            add(sellXRPVo);
-        }
-        {
-            buyXRP.setBounds(10 + w1, 40, w1, 20);
-            buyXRP.setHorizontalTextPosition(SwingConstants.RIGHT);
+            buyXRP.setBounds(10, y2, w1, 20);
+            buyXRP.setHorizontalAlignment(SwingConstants.RIGHT);
             buyXRP.setForeground(Color.BLUE);
             add(buyXRP);
             ///////
-            buyXRPVo.setBounds(10 + w1, 70, w1, 20);
-            buyXRPVo.setHorizontalTextPosition(SwingConstants.RIGHT);
+            /**
+            buyXRPVo.setBounds(10 + w1, y3, w1, 20);
+            buyXRPVo.setHorizontalAlignment(SwingConstants.RIGHT);
             buyXRPVo.setForeground(Color.BLUE);
             add(buyXRPVo);
+             */
         }
-        sellBTC.setBounds(10, 70, w1, 20);
-        sellBTC.setHorizontalTextPosition(SwingConstants.RIGHT);
-        add(sellBTC);
-        profit.setBounds(10 + w1, 70, w1, 20);
-        profit.setHorizontalTextPosition(SwingConstants.RIGHT);
-        add(profit);
-        profit2.setBounds(10 + w1 + w1, 70, w1, 20);
-        profit2.setHorizontalTextPosition(SwingConstants.RIGHT);
-        add(profit2);
+        {
+            sellXRP.setBounds(10 + w1, y2, w1, 20);
+            sellXRP.setHorizontalAlignment(SwingConstants.RIGHT);
+            sellXRP.setForeground(Color.PINK);
+            add(sellXRP);
+            //////
+            /**
+            sellXRPVo.setBounds(10, y3, w1 * 3, 20);
+            //sellXRPVo.setHorizontalAlignment(SwingConstants.RIGHT);
+            sellXRPVo.setForeground(Color.WHITE);
+            add(sellXRPVo);
+            */
+        }
+        //        sellBTC.setBounds(10, y3, w1, 20);
+        //        sellBTC.setHorizontalAlignment(SwingConstants.RIGHT);
+        //        add(sellBTC);
+        //        profit.setBounds(10 + w1, y3, w1, 20);
+        //        profit.setHorizontalAlignment(SwingConstants.RIGHT);
+        //        add(profit);
+        //        profit2.setBounds(10 + w1 + w1, y3, w1, 20);
+        //        profit2.setHorizontalAlignment(SwingConstants.RIGHT);
+        //        add(profit2);
+        //
+        //        stop.setBounds(10, 100, w1, 20);
+        //        stop.setHorizontalAlignment(SwingConstants.RIGHT);
+        //        add(stop);
 
-        stop.setBounds(10, 100, w1, 20);
-        stop.setHorizontalTextPosition(SwingConstants.RIGHT);
-        add(stop);
-
-        //        JButton btn = new JButton("Sell");
-        //        btn.setBounds(10 + w1, 100, w1, 20);
-        //        btn.addActionListener(new ActionListener() {
-        //            @Override
-        //            public void actionPerformed(ActionEvent e) {
-        //                try {
-        //                    Order order = doSellMARKET(CurrencyPair.BTC_JPY, amount);
-        //                    if (order != null && order.orderId != 0) {
-        //                        JOptionPane.showMessageDialog(me(), order.toString(), "Info", JOptionPane.INFORMATION_MESSAGE);
-        //                    } else {
-        //                        JOptionPane.showMessageDialog(me(), "order = null", "Error", JOptionPane.ERROR_MESSAGE);
-        //                    }
-        //                } catch (BitbankException | IOException e1) {
-        //                    e1.printStackTrace();
-        //                    JOptionPane.showMessageDialog(me(), e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        //                }
-        //            }
-        //        });
-        //        add(btn);
-
-        int fontSize = 20;
+        int fontSize = 18;
         int tableRowHight = fontSize + 6;
         Font font14 = new Font("MS Gothic", Font.PLAIN, fontSize);
         {
@@ -231,7 +245,7 @@ public class BitBankMainFrame extends JPanel {
             table.setFillsViewportHeight(true);
             table.setComponentPopupMenu(new TablePopupMenu());
             final JScrollPane jScrollPane = new JScrollPane(table);
-            jScrollPane.setBounds(10, 130, 1400, 300);
+            jScrollPane.setBounds(10, 130, 1500, 300);
             add(jScrollPane);
         }
         {
@@ -243,7 +257,7 @@ public class BitBankMainFrame extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent event) {
                     try {
-                        BigDecimal price = sell;//new BigDecimal("10");
+                        BigDecimal price = sellNOW;//new BigDecimal("10");
                         BigDecimal amount = new BigDecimal(buyAmountFixed);
                         logger.debug("buy:" + price.toPlainString());
                         final Order order = BitbankClient.me().bbW.sendOrder(Config.me().getPair(), price, amount, OrderSide.BUY, OrderType.LIMIT);
@@ -283,7 +297,7 @@ public class BitBankMainFrame extends JPanel {
                         return;
                     }
                     try {
-                        BigDecimal price = buy;
+                        BigDecimal price = buyNOW;
                         final long orderIdBought = model.getOrderId(selectedRowIndex);
                         final BigDecimal amount = model.getExecutedAmount(selectedRowIndex);
                         logger.debug("sell:" + price.toPlainString() + ", amount:" + amount.toPlainString());
@@ -387,6 +401,39 @@ public class BitBankMainFrame extends JPanel {
                 }
             });
             add(btn);
+        }
+        // transaction monitor
+        {
+            buyCountLbl.setText("0");
+            buyCountLbl.setBounds(1100, y1, 100, 20);
+            buyCountLbl.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+            buyCountLbl.setHorizontalAlignment(SwingConstants.RIGHT);
+            add(buyCountLbl);
+
+            buyTotalLbl.setText("0");
+            buyTotalLbl.setBounds(1200 - 1, y1, 200, 20);
+            buyTotalLbl.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+            buyTotalLbl.setHorizontalAlignment(SwingConstants.RIGHT);
+            buyTotalLbl.setForeground(Color.BLUE);
+            add(buyTotalLbl);
+
+            sellCountLbl.setText("0");
+            sellCountLbl.setBounds(1100, y2, 100, 20);
+            sellCountLbl.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+            sellCountLbl.setHorizontalAlignment(SwingConstants.RIGHT);
+            add(sellCountLbl);
+
+            sellTotalLbl.setText("0");
+            sellTotalLbl.setBounds(1200 - 1, y2, 200, 20);
+            sellTotalLbl.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+            sellTotalLbl.setHorizontalAlignment(SwingConstants.RIGHT);
+            sellTotalLbl.setForeground(Color.PINK);
+            add(sellTotalLbl);
+
+            buySellPower.setBounds(1100 - 1, y3, 300, 20);
+            buySellPower.setStringPainted(true);// このプロパティーは、進捗バーが進捗文字列を描画するかどうかを指定します
+            buySellPower.setValue(0);
+            add(buySellPower);
         }
     }
 
