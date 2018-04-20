@@ -52,6 +52,7 @@ import pubnub.TransMonitorUpdater;
 import utils.BitbankClient;
 import utils.DateUtil;
 import utils.OtherUtil;
+import utils.StringUtilsKR;
 
 public class BitBankMainFrame extends JPanel {
 
@@ -106,7 +107,7 @@ public class BitBankMainFrame extends JPanel {
     private BitBankMainFrame() {
         setLayout(null);
         setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-        setPreferredSize(new Dimension(1500, 480));
+        setPreferredSize(new Dimension(1530, 480));
 
         initGUI();
 
@@ -245,7 +246,7 @@ public class BitBankMainFrame extends JPanel {
             table.setFillsViewportHeight(true);
             table.setComponentPopupMenu(new TablePopupMenu());
             final JScrollPane jScrollPane = new JScrollPane(table);
-            jScrollPane.setBounds(10, 130, 1500, 300);
+            jScrollPane.setBounds(10, 130, 1510, 300);
             add(jScrollPane);
         }
         {
@@ -355,11 +356,10 @@ public class BitBankMainFrame extends JPanel {
             });
             add(btn);
         }
-        /*
         {
             JButton btn = new JButton("Add Order");
             btn.setFont(font14);
-            btn.setBounds(1200, 440, 160, tableRowHight);
+            btn.setBounds(1300, 440, 160, tableRowHight);
             btn.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent event) {
@@ -375,21 +375,25 @@ public class BitBankMainFrame extends JPanel {
                         return;
                     }
                     OrderManager.me().add(orderId);
-                    Order dummyOrder = new Order();
-                    dummyOrder.orderId = orderId;
-                    dummyOrder.pair = Config.me().getPair().getCode();
-                    dummyOrder.side = OrderSide.SELL;
-                    dummyOrder.startAmount = BigDecimal.ZERO;
-                    dummyOrder.price = BigDecimal.ZERO;
-                    dummyOrder.status = "UNFILLED";
-                    dummyOrder.orderedAt = new Date();
-        
-                    model.addOrderData(dummyOrder);
+                    /**{
+                        Order dummyOrder = new Order();
+                        dummyOrder.orderId = orderId;
+                        dummyOrder.pair = Config.me().getPair().getCode();
+                        dummyOrder.side = OrderSide.SELL;
+                        dummyOrder.startAmount = BigDecimal.ZERO;
+                        dummyOrder.executedAmount = BigDecimal.ZERO;
+                        dummyOrder.remainingAmount = BigDecimal.ZERO;
+                        dummyOrder.price = BigDecimal.ZERO;
+                        dummyOrder.averagePrice = BigDecimal.ZERO;
+                        dummyOrder.status = "UNFILLED";
+                        dummyOrder.orderedAt = new Date();
+                        model.addOrderData(dummyOrder);
+                    }*/
+                    initOrderList(true);
                 }
             });
             add(btn);
         }
-        */
         {
             JButton btn = new JButton("Reload");
             btn.setFont(font14);
