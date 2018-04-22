@@ -45,13 +45,14 @@ public class TransationForm extends JPanel {
         return singleton;
     }
 
-    private final JLabel buyCountLbl = new JLabel();
-    private final JLabel buyTotalLbl = new JLabel();
-    private final JLabel sellCountLbl = new JLabel();
-    private final JLabel sellTotalLbl = new JLabel();
-    private final JProgressBar buySellPower = new JProgressBar(0, 100);
+    //    private final JLabel buyCountLbl = new JLabel();
+    //    private final JLabel buyTotalLbl = new JLabel();
+    //    private final JLabel sellCountLbl = new JLabel();
+    //    private final JLabel sellTotalLbl = new JLabel();
+    //    private final JProgressBar buySellPower = new JProgressBar(0, 100);
 
     private TransationForm() {
+        logger.debug("TransationForm start");
         setLayout(null);
         setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
         setPreferredSize(new Dimension(1530, 480));
@@ -73,7 +74,7 @@ public class TransationForm extends JPanel {
             arp.start();
 
             Db.update("create table if not exists transactions (transaction_id integer, side string, price real, amount real, executed_at integer)");
-            arp.addMapping("transactions", TblTransactions.class);
+            //arp.addMapping("transactions", TblTransactions.class);
 
             new BBReal() {
                 @Override
@@ -139,8 +140,8 @@ public class TransationForm extends JPanel {
         a01.place(this, x1, 10);
         a05.place(this, x2, 10);
         a10.place(this, x3, 10);
-        a15.place(this, x4, 10);
-        a20.place(this, x5, 10);
+        a15.place(this, x1, 200);
+        a20.place(this, x2, 200);
     }
 
     protected class MyComponet {
@@ -171,7 +172,7 @@ public class TransationForm extends JPanel {
 
             JPanel panel = new JPanel();
             panel.setLayout(null);
-            panel.setBounds(x, y, 350, 200);
+            panel.setBounds(x, y, 350, 160);
             panel.setBorder(BorderFactory.createTitledBorder(name));
             container.add(panel);
 
