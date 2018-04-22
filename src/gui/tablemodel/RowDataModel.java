@@ -40,18 +40,18 @@ public class RowDataModel extends DefaultTableModel {
             new ColumnContext("OrderId", Long.class, false, 100), //
             new ColumnContext("Pair", String.class, false, 80), //
             new ColumnContext("Side", String.class, false, 60), //
-            new ColumnContext("Executed Amount", BigDecimal.class, false, 120), //
-            new ColumnContext("Amount", BigDecimal.class, false, 120), //
-            new ColumnContext("Price", BigDecimal.class, false, 100), //
+            new ColumnContext("Executed Amount", BigDecimal.class, false, 100), //
+            new ColumnContext("Amount", BigDecimal.class, false, 100), //
+            new ColumnContext("Price", BigDecimal.class, false, 80), //
             new ColumnContext("Status", String.class, false, 150), //
-            new ColumnContext("Order Date", String.class, false, 120), // order date
+            new ColumnContext("Order Date", String.class, false, 130), // order date
             new ColumnContext("Buy-Price", BigDecimal.class, false, 100), //buy
-            new ColumnContext("Profit", BigDecimal.class, false, 100), //buy
+            new ColumnContext("Profit", BigDecimal.class, false, 90), //buy
             // new ColumnContext("IfSell", BigDecimal.class, false, 100), //
-            new ColumnContext("L/C", BigDecimal.class, false, 100), //
-            new ColumnContext("LS", BigDecimal.class, false, 100), //
+            new ColumnContext("L/C", BigDecimal.class, false, 80), //
+            new ColumnContext("LS", BigDecimal.class, false, 50), //
             new ColumnContext("T/P", BigDecimal.class, false, 100), //
-            new ColumnContext("LastUpd", String.class, false, 120), //
+            new ColumnContext("LastUpd", String.class, false, 130), //
     };
     private int number = 1;
 

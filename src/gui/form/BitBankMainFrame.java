@@ -258,8 +258,9 @@ public class BitBankMainFrame extends JPanel {
                 @Override
                 public void actionPerformed(ActionEvent event) {
                     try {
-                        BigDecimal price = sellNOW;//new BigDecimal("10");
-                        BigDecimal amount = new BigDecimal(buyAmountFixed);
+                        BigDecimal price = sellNOW;
+                        price = OtherUtil.me().average(Config.me().getRoundCurrencyPair(), sellNOW, buyNOW);
+                        final BigDecimal amount = new BigDecimal(buyAmountFixed);
                         logger.debug("buy:" + price.toPlainString());
                         final Order order = BitbankClient.me().bbW.sendOrder(Config.me().getPair(), price, amount, OrderSide.BUY, OrderType.LIMIT);
                         if (order == null || order.orderId == 0) {
@@ -473,7 +474,7 @@ public class BitBankMainFrame extends JPanel {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                }, 0, 3, TimeUnit.SECONDS);
+                } , 0, 3, TimeUnit.SECONDS);
             }
         } catch (Exception e) {
             e.printStackTrace();
