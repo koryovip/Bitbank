@@ -29,10 +29,10 @@ public class RowDataModel extends DefaultTableModel {
     public static final int COL_INDEX_DATE = __COL_INDEX__++;
     public static final int COL_INDEX_DIFF = __COL_INDEX__++;
     public static final int COL_INDEX_PROFIT = __COL_INDEX__++;
-    // public static final int COL_INDEX_IFSELL = __COL_INDEX__++;
-    public static final int COL_INDEX_LOSTCUT = __COL_INDEX__++;
-    public static final int COL_INDEX_TRALINGSTOP = __COL_INDEX__++;
     public static final int COL_INDEX_TAKEPROFIT = __COL_INDEX__++;
+    public static final int COL_INDEX_TRALINGSTOP = __COL_INDEX__++;
+    public static final int COL_INDEX_TAKEPROFIT2 = __COL_INDEX__++;
+    public static final int COL_INDEX_LOSTCUT = __COL_INDEX__++;
     public static final int COL_INDEX_LASTUPD = __COL_INDEX__++;
 
     private static final ColumnContext[] COLUMN_ARRAY = { //
@@ -45,12 +45,12 @@ public class RowDataModel extends DefaultTableModel {
             new ColumnContext("Price", BigDecimal.class, false, 80), //
             new ColumnContext("Status", String.class, false, 150), //
             new ColumnContext("Order Date", String.class, false, 130), // order date
-            new ColumnContext("Buy-Price", BigDecimal.class, false, 100), //buy
-            new ColumnContext("Profit", BigDecimal.class, false, 90), //buy
-            // new ColumnContext("IfSell", BigDecimal.class, false, 100), //
-            new ColumnContext("L/C", BigDecimal.class, false, 80), //
-            new ColumnContext("LS", BigDecimal.class, false, 50), //
-            new ColumnContext("T/P", BigDecimal.class, false, 100), //
+            new ColumnContext("Buy-Price", BigDecimal.class, false, 100), // buy
+            new ColumnContext("Profit", BigDecimal.class, false, 100), // buy
+            new ColumnContext("T/P", BigDecimal.class, false, 100), // COL_INDEX_TAKEPROFIT
+            new ColumnContext("TStop", BigDecimal.class, false, 50), // COL_INDEX_TRALINGSTOP
+            new ColumnContext("T/PPrice", BigDecimal.class, false, 80), // COL_INDEX_TAKEPROFIT2
+            new ColumnContext("L/C", BigDecimal.class, false, 80), // COL_INDEX_LOSTCUT
             new ColumnContext("LastUpd", String.class, false, 130), //
     };
     private int number = 1;
@@ -85,9 +85,10 @@ public class RowDataModel extends DefaultTableModel {
                 BigDecimal.ZERO, // diff 現在の買い注文の最高値 - 買値
                 BigDecimal.ZERO, // profit (現在の買い注文の最高値 - 買値) × 約定数量
                 // ↓ Trailing Stop 設定した場合、realtime 更新
-                BigDecimal.ZERO, // lostcut
-                BigDecimal.ZERO, // ts
-                BigDecimal.ZERO, // tp
+                BigDecimal.ZERO, // COL_INDEX_LOSTCUT
+                BigDecimal.ZERO, // COL_INDEX_TRALINGSTOP
+                BigDecimal.ZERO, // COL_INDEX_TAKEPROFIT
+                BigDecimal.ZERO, // COL_INDEX_TAKEPROFIT2
                 // case by case
                 DateUtil.me().format2(new Date()) // last update time
         };
@@ -221,6 +222,9 @@ public class RowDataModel extends DefaultTableModel {
             } else {
                 super.setValueAt(ts.getDistance(), index, COL_INDEX_TAKEPROFIT);
             }
+
+            super.setValueAt(ts.getSellPrice(), index, COL_INDEX_TAKEPROFIT2);
+
             break;
         }
     }
@@ -235,6 +239,8 @@ public class RowDataModel extends DefaultTableModel {
             super.setValueAt(BigDecimal.ZERO, index, COL_INDEX_LOSTCUT);
             super.setValueAt(BigDecimal.ZERO, index, COL_INDEX_TRALINGSTOP);
             super.setValueAt(BigDecimal.ZERO, index, COL_INDEX_TAKEPROFIT);
+            super.setValueAt(BigDecimal.ZERO, index, COL_INDEX_TAKEPROFIT2);
+
             break;
         }
     }

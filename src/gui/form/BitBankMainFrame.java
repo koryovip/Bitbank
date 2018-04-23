@@ -117,7 +117,7 @@ public class BitBankMainFrame extends JPanel {
         // update(3, 3);
 
         monitor1Start();
-        monitor2Start();
+        //monitor2Start();
     }
 
     private void monitor1Start() {
@@ -246,7 +246,7 @@ public class BitBankMainFrame extends JPanel {
             table.setFillsViewportHeight(true);
             table.setComponentPopupMenu(new TablePopupMenu());
             final JScrollPane jScrollPane = new JScrollPane(table);
-            jScrollPane.setBounds(10, 130, 1510, 300);
+            jScrollPane.setBounds(10, 130, 1500, 300);
             add(jScrollPane);
         }
         {
