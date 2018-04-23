@@ -69,3 +69,41 @@ select
 from transactions
 where executed_at > strftime('%s','now','-30 minutes')*1000
 #end
+
+#sql("candles")
+select
+    ceil
+    , substr(min(z.open_time2), 32) open_time
+    , substr(min(z.open2), 32) open
+    , max(high) high
+    , min(low) low
+    , substr(max(z.close2), 32) close
+    , datetime(substr(min(z.open_time2), 32)/1000, 'unixepoch', '+9 hours') open_time2
+    from (
+        select y.*
+        , GBV||','||y.open_time open_time2
+        , GBV||','||y.open open2
+        , GBV||','||y.close close2
+        from (
+            select x.rowNum
+            , printf("%030.20f", groupby) GBV
+            , round(x.groupby + 0.5) - CASE WHEN x.groupby <= -0.5 OR round(x.groupby + 0.5) - x.groupby != 1.0 THEN 0.0 ELSE 1.0 END [ceil]
+            , x.OPEN_TIME, x.OPEN, x.HIGH, x.LOW, x.CLOSE, x.CLOSE_TIME
+            from (
+                select t.rowNum
+                , t.rowNum/? groupby
+                , t.OPEN_TIME, t.OPEN, t.HIGH, t.LOW, t.CLOSE, t.CLOSE_TIME
+                from (
+                    select
+                    --(SELECT COUNT(*) FROM xrp_jpy AS t2 WHERE t2.OPEN_TIME <= t1.OPEN_TIME) AS rowNum,
+                    ((OPEN_TIME - ?)/60000)+1 AS rowNum
+                    , OPEN_TIME, OPEN, HIGH, LOW, CLOSE, CLOSE_TIME
+                    --,datetime(OPEN_TIME/1000, 'unixepoch', '+9 hours') open_time2
+                    from xrp_jpy t1
+                    where t1.OPEN_TIME >= ?
+                    order by t1.OPEN_TIME asc
+                ) t
+            ) x
+        ) y
+    ) z group by z.ceil order by z.ceil asc
+#end
