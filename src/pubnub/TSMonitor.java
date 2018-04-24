@@ -15,6 +15,7 @@ import com.pubnub.api.models.consumer.pubsub.PNMessageResult;
 import cc.Config;
 import cc.bitbank.entity.Order;
 import gui.TS;
+import gui.TS.TSState;
 import gui.form.BitBankMainFrame;
 import mng.OrderManager;
 import mng.TSHandler;
@@ -36,8 +37,8 @@ public class TSMonitor extends BBReal {
     protected List<String> channels() {
         final String pair = Config.me().getPair().getCode();
         return Arrays.asList(super.getFullChannelName(KRPubNubChannel.ticker, pair) //
-//                , super.getFullChannelName(KRPubNubChannels.depth, pair) //
-//                , super.getFullChannelName(KRPubNubChannels.transactions, pair) //
+        //                , super.getFullChannelName(KRPubNubChannels.depth, pair) //
+        //                , super.getFullChannelName(KRPubNubChannels.transactions, pair) //
         );
     }
 
@@ -82,12 +83,13 @@ public class TSMonitor extends BBReal {
                     // logger.debug("onSelling");
                     return;
                 }
-                boolean check = ts.check(hoge.data.buy);
 
-                if (!check) {
+                TSState state = ts.check2(/*hoge.data.buy*/OtherUtil.me().average(Config.me().getRoundCurrencyPair(), hoge.data.buy, hoge.data.sell)); // 売買の平均値を渡す
+                if (!(state == TSState.LossCutSell || state == TSState.TralingStopSell)) {
                     return;
                 }
-                final BigDecimal profit = ts.isVictory() ? ts.profit() : BigDecimal.ZERO;
+
+                final BigDecimal profit = ts.isVictory() ? ts.profitTS() : BigDecimal.ZERO;
                 logger.debug("{} : {} → {} | {}\t{}\t{}", DateUtil.me().format5(hoge.data.timestamp), ts.bought, hoge.data.buy, ts.getSellPrice(), ts.getDistance(), profit);
 
                 new Thread(new Seller(Config.me().getPair(), /*hoge.data.buy*/ts.getSellPrice(), ts.amount, new KRTransaction<Order>() {

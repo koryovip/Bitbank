@@ -20,6 +20,7 @@ import gui.form.BitBankMainFrame;
 import gui.form.SetupDialog;
 import gui.tablemodel.RowDataModel;
 import mng.TSManager;
+import utils.OtherUtil;
 import utils.StringUtilsKR;
 
 public class TablePopupMenu extends JPopupMenu {
@@ -27,7 +28,8 @@ public class TablePopupMenu extends JPopupMenu {
 
     private final JMenuItem calc;
     private final JMenuItem setupTs;
-    private final JMenu modifyTs;
+    private final JMenu modifyTs; // Trailing Stop
+    private final JMenu modifyLc; // lost cut
 
     public TablePopupMenu() {
         super();
@@ -80,23 +82,44 @@ public class TablePopupMenu extends JPopupMenu {
                 dialog.setVisible(true);
             });
         }
+        addSeparator();
         {
             ButtonGroup group = new ButtonGroup();
-            modifyTs = new JMenu("Change TS");
-            group.add(modifyTs.add(this.createJMenuItem("none", BigDecimal.ZERO)));
+            modifyTs = new JMenu("Change TralingStop");
+            group.add(modifyTs.add(this.createJMenuItemTs("none", BigDecimal.ZERO)));
             modifyTs.addSeparator();
-            group.add(modifyTs.add(this.createJMenuItem("0.2")));
-            group.add(modifyTs.add(this.createJMenuItem("0.3")));
-            group.add(modifyTs.add(this.createJMenuItem("0.4")));
-            group.add(modifyTs.add(this.createJMenuItem("0.5")));
-            group.add(modifyTs.add(this.createJMenuItem("0.6")));
-            group.add(modifyTs.add(this.createJMenuItem("0.7")));
-            group.add(modifyTs.add(this.createJMenuItem("0.8")));
-            group.add(modifyTs.add(this.createJMenuItem("0.9")));
-            group.add(modifyTs.add(this.createJMenuItem("1.0")));
+            group.add(modifyTs.add(this.createJMenuItemTs("0.2")));
+            group.add(modifyTs.add(this.createJMenuItemTs("0.3")));
+            group.add(modifyTs.add(this.createJMenuItemTs("0.4")));
+            group.add(modifyTs.add(this.createJMenuItemTs("0.5")));
+            group.add(modifyTs.add(this.createJMenuItemTs("0.6")));
+            group.add(modifyTs.add(this.createJMenuItemTs("0.7")));
+            group.add(modifyTs.add(this.createJMenuItemTs("0.8")));
+            group.add(modifyTs.add(this.createJMenuItemTs("0.9")));
+            group.add(modifyTs.add(this.createJMenuItemTs("1.0")));
             modifyTs.addSeparator();
-            modifyTs.add(this.createJMenuItem2("custom"));
+            modifyTs.add(this.createJMenuItem2Ts("custom"));
             add(modifyTs);
+        }
+        addSeparator();
+        {
+            ButtonGroup group = new ButtonGroup();
+            modifyLc = new JMenu("Change LossCut");
+            group.add(modifyLc.add(this.createJMenuItemLc("none", BigDecimal.ZERO)));
+            modifyLc.addSeparator();
+            modifyLc.add(this.createJMenuItem2Lc("custom"));
+            modifyLc.addSeparator();
+            group.add(modifyLc.add(this.createJMenuItemLc("99%", new BigDecimal("99"))));
+            group.add(modifyLc.add(this.createJMenuItemLc("98%", new BigDecimal("98"))));
+            group.add(modifyLc.add(this.createJMenuItemLc("97%", new BigDecimal("97"))));
+            group.add(modifyLc.add(this.createJMenuItemLc("96%", new BigDecimal("96"))));
+            group.add(modifyLc.add(this.createJMenuItemLc("95%", new BigDecimal("95"))));
+            group.add(modifyLc.add(this.createJMenuItemLc("94%", new BigDecimal("94"))));
+            group.add(modifyLc.add(this.createJMenuItemLc("93%", new BigDecimal("93"))));
+            group.add(modifyLc.add(this.createJMenuItemLc("92%", new BigDecimal("92"))));
+            group.add(modifyLc.add(this.createJMenuItemLc("91%", new BigDecimal("91"))));
+            group.add(modifyLc.add(this.createJMenuItemLc("90%", new BigDecimal("90"))));
+            add(modifyLc);
         }
     }
 
@@ -109,27 +132,28 @@ public class TablePopupMenu extends JPopupMenu {
             setupTs.setEnabled((table.getSelectedRowCount() == 1) && model.canSetTC(table.getSelectedRow()));
             //modifyTs.setEnabled((table.getSelectedRowCount() == 1) && model.canSetTC(table.getSelectedRow()));
             modifyTs.setEnabled(table.getSelectedRowCount() > 0);
+            modifyLc.setEnabled(table.getSelectedRowCount() > 0);
             super.show(c, x, y);
         }
     }
 
-    private JMenuItem createJMenuItem(String value) {
-        return createJMenuItem(value, new BigDecimal(value));
+    private JMenuItem createJMenuItemTs(String value) {
+        return createJMenuItemTs(value, new BigDecimal(value));
     }
 
-    private JMenuItem createJMenuItem(String text, BigDecimal value) {
+    private JMenuItem createJMenuItemTs(String text, BigDecimal value) {
         JMenuItem ts1 = new JRadioButtonMenuItem(new ModifyTsAction(value));
         ts1.setText(text);
         return ts1;
     }
 
-    private JMenuItem createJMenuItem2(String text) {
+    private JMenuItem createJMenuItem2Ts(String text) {
         JMenuItem ts1 = new JMenuItem(new AbstractAction() {
             private static final long serialVersionUID = 1516788165956125322L;
 
             @Override
             public void actionPerformed(ActionEvent event) {
-                String input = JOptionPane.showInputDialog(BitBankMainFrame.me(), "TPの値を入力してください：");
+                String input = JOptionPane.showInputDialog(BitBankMainFrame.me(), "TralingStopの値を入力してください：", "");
                 if (StringUtilsKR.me().isStrBlank(input, true)) {
                     return;
                 }
@@ -156,7 +180,71 @@ public class TablePopupMenu extends JPopupMenu {
             this.value = value;
         }
 
-        private final BigDecimal defaultLostCut = new BigDecimal(1);
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            JTable table = (JTable) getInvoker();
+            RowDataModel model = (RowDataModel) table.getModel();
+            for (int rowIndex : table.getSelectedRows()) {
+                if (!model.canSell(rowIndex)) {
+                    continue;
+                }
+                final long orderId = model.getOrderId(rowIndex);
+                final BigDecimal averagePrice = model.getAveragePrice(rowIndex);
+                final BigDecimal executedAmount = model.getExecutedAmount(rowIndex);
+                TSManager.me().addOrUpdateTs(orderId, averagePrice, executedAmount, this.value);
+                /*
+                if (this.value.compareTo(BigDecimal.ZERO) <= 0) {
+                    model.resetRowDataTS(orderId);
+                }
+                */
+            }
+        }
+    }
+
+    //    private JMenuItem createJMenuItemLc(String value) {
+    //        return createJMenuItemLc(value, new BigDecimal(value));
+    //    }
+
+    private JMenuItem createJMenuItemLc(String text, BigDecimal value) {
+        JMenuItem ts1 = new JRadioButtonMenuItem(new ModifyLcAction(value, true));
+        ts1.setText(text);
+        return ts1;
+    }
+
+    private JMenuItem createJMenuItem2Lc(String text) {
+        JMenuItem ts1 = new JMenuItem(new AbstractAction() {
+            private static final long serialVersionUID = 1516788165956125322L;
+
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                String input = JOptionPane.showInputDialog(BitBankMainFrame.me(), "LossCutの値を入力してください：", "");
+                if (StringUtilsKR.me().isStrBlank(input, true)) {
+                    return;
+                }
+                final BigDecimal value;
+                try {
+                    value = new BigDecimal(input);
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(BitBankMainFrame.me(), input, "値不正", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                new ModifyLcAction(value, false).actionPerformed(event);
+            }
+        });
+        ts1.setText(text);
+        return ts1;
+    }
+
+    public class ModifyLcAction extends AbstractAction {
+
+        private static final long serialVersionUID = -4855080588158297797L;
+        private final BigDecimal value;
+        private final boolean present;
+
+        public ModifyLcAction(BigDecimal value, boolean present) {
+            this.present = present;
+            this.value = value;//OtherUtil.me().scale(value, Config.me().getRoundCurrencyPair());
+        }
 
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -167,15 +255,12 @@ public class TablePopupMenu extends JPopupMenu {
                     continue;
                 }
                 final long orderId = model.getOrderId(rowIndex);
-                if (this.value.compareTo(BigDecimal.ZERO) <= 0) {
-                    if (TSManager.me().remove(orderId)) {
-                        model.resetRowDataTS(orderId);
-                    }
-                } else {
-                    final BigDecimal averagePrice = model.getAveragePrice(rowIndex);
-                    final BigDecimal executedAmount = model.getExecutedAmount(rowIndex);
-                    TSManager.me().addOrUpdate(orderId, averagePrice, executedAmount, defaultLostCut, this.value);
-                }
+                final BigDecimal averagePrice = model.getAveragePrice(rowIndex);
+                final BigDecimal executedAmount = model.getExecutedAmount(rowIndex);
+                BigDecimal price = this.present ? //
+                        OtherUtil.me().scale(OtherUtil.me().persent2(averagePrice, this.value), Config.me().getRoundCurrencyPair()) // %計算。平均取得価格の99％
+                        : OtherUtil.me().scale(this.value, Config.me().getRoundCurrencyPair());
+                TSManager.me().addOrUpdateLc(orderId, averagePrice, executedAmount, price);
             }
         }
     }

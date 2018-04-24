@@ -2,25 +2,31 @@ package gui;
 
 import java.math.BigDecimal;
 
-import utils.OtherUtil;
-
 public class TS {
 
-    private final BigDecimal MAX = new BigDecimal(Integer.MAX_VALUE);
-    private BigDecimal sellPrice = MAX;
+    // private final BigDecimal MAX = new BigDecimal(Integer.MAX_VALUE);
+    private BigDecimal sellPrice = BigDecimal.ZERO;
 
     public final long orderId;
     public final BigDecimal bought;
     public final BigDecimal amount;
-    public BigDecimal lostCut;
-    public BigDecimal tralingStop;
+    public BigDecimal lossCut = BigDecimal.ZERO;
+    public BigDecimal tralingStop = BigDecimal.ZERO;
     private boolean onSelling = false;
 
-    public TS(long orderId, BigDecimal bought, BigDecimal amount, BigDecimal lostCut, BigDecimal tralingStop) {
+    public static enum TSState {
+        Idle, LossCutSell // lossCutで売り
+        , TralingStoppingDown // TSで、買値以下
+        , TralingStopUping // TSで買値以上
+        , TralingStopSell // TSで売り
+        ;
+    }
+
+    public TS(long orderId, BigDecimal bought, BigDecimal amount, BigDecimal lossCut, BigDecimal tralingStop) {
         this.orderId = orderId;
         this.bought = bought;
         this.amount = amount;
-        this.lostCut = lostCut;
+        this.lossCut = lossCut;
         this.tralingStop = tralingStop;
     }
 
@@ -28,49 +34,41 @@ public class TS {
         return this.onSelling;
     }
 
-    //    public static void main(String[] args) {
-    //        Bitbankcc bb = new Bitbankcc();
-    //        bb.setKey(Config.me().getApiKey(), Config.me().getApiSecret());
-    //
-    //        CurrencyPair pair = CurrencyPair.BTC_JPY;
-    //
-    //        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-    //        service.scheduleAtFixedRate(() -> {
-    //            try {
-    //                Ticker ticker = bb.getTicker(pair);
-    //                // lostcut
-    //                if (ticker.buy.compareTo(lostCut) <= 0) {
-    //                    Order order = bb.sendOrder(pair, BigDecimal.ZERO, hold, OrderSide.SELL, OrderType.MARKET);
-    //                    if (order != null && order.orderId != 0) {
-    //                        System.out.println(order);
-    //                        System.exit(1);
-    //                    }
-    //                }
-    //                BigDecimal diff = ticker.buy.subtract(tralingStop);
-    //                if ((sellPrice.compareTo(MAX) == 0) || (diff.compareTo(sellPrice) > 0)) {
-    //                    sellPrice = diff;
-    //                }
-    //                // tralingStop
-    //                if (sellPrice.compareTo(bought) > 0 && ticker.buy.compareTo(sellPrice) <= 0) {
-    //                    Order order = bb.sendOrder(pair, BigDecimal.ZERO, hold, OrderSide.SELL, OrderType.MARKET);
-    //                    if (order != null && order.orderId != 0) {
-    //                        System.out.println(order);
-    //                        System.exit(1);
-    //                    }
-    //                }
-    //                System.out.println(String.format("%s\t%s\t%s\t%s", lostCut, ticker.buy, sellPrice, ticker.buy.subtract(bought).setScale(0, RoundingMode.HALF_UP)));
-    //
-    //            } catch (Exception e) {
-    //                e.printStackTrace();
-    //            }
-    //        } , 0, 3, TimeUnit.SECONDS);
-    //    }
+    public TSState check2(final BigDecimal buy) {
+        if (lossCut.compareTo(BigDecimal.ZERO) > 0 && buy.compareTo(lossCut) <= 0) {
+            // lossCut
+            this.sellPrice = lossCut;
+            this.onSelling = true;
+            return TSState.LossCutSell;
+        }
+        if (tralingStop.compareTo(BigDecimal.ZERO) <= 0) {
+            // TS値未設定の場合、何もしない
+            this.sellPrice = BigDecimal.ZERO;
+            return TSState.Idle;
+        }
+        if (buy.compareTo(sellPrice) <= 0) {
+            this.onSelling = true;
+            return TSState.TralingStopSell;
+        }
+        BigDecimal sell = buy.subtract(tralingStop);
+        if (sell.compareTo(sellPrice) > 0) {
+            sellPrice = sell;
+            return TSState.TralingStopUping;
+        }
+        if (sellPrice.compareTo(bought) <= 0) {
+            // 買値より安い場合、何もしない
+            return TSState.TralingStoppingDown;
+        }
+        return TSState.Idle;
+    }
 
+    /**
     public boolean check(final BigDecimal buy) {
+    
         if (this.onSelling) {
             return false;
         }
-        if (buy.compareTo(lostCut) <= 0) {
+        if (lossCut.compareTo(BigDecimal.ZERO) > 0 && buy.compareTo(lossCut) <= 0) {
             this.onSelling = true;
             return true;
         }
@@ -85,13 +83,14 @@ public class TS {
         }
         return false;
     }
+    */
 
     public void resetTralingStop(BigDecimal tralingStop) {
         this.tralingStop = tralingStop;
     }
 
-    public void resetLostCut(BigDecimal lostCut) {
-        this.lostCut = lostCut;
+    public void resetLostCut(BigDecimal lossCut) {
+        this.lossCut = lossCut;
     }
 
     public BigDecimal getSellPrice() {
@@ -99,6 +98,9 @@ public class TS {
     }
 
     public BigDecimal getDistance() {
+        if (this.sellPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
         return this.sellPrice.subtract(this.bought);
     }
 
@@ -110,8 +112,15 @@ public class TS {
         return getDistance().compareTo(BigDecimal.ZERO) > 0;
     }
 
-    public BigDecimal profit() {
-        return OtherUtil.me().scale(getDistance().multiply(this.amount), 2);
+    public BigDecimal profitTS() {
+        return getDistance().multiply(this.amount);
+    }
+
+    public BigDecimal profitLC() {
+        if (this.lossCut.compareTo(BigDecimal.ZERO) <= 0) {
+            return BigDecimal.ZERO;
+        }
+        return this.lossCut.subtract(this.bought).multiply(this.amount);
     }
 
 }

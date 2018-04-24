@@ -579,4 +579,12 @@ public class BitBankMainFrame extends JPanel {
     final public void resetRowDataTS(Order order) {
         model.resetRowDataTS(order.orderId);
     }
+
+    final public BigDecimal getBuyNow() {
+        return this.buyNOW;
+    }
+
+    final public BigDecimal getSellNow() {
+        return this.sellNOW;
+    }
 }

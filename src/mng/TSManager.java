@@ -24,7 +24,7 @@ public class TSManager {
 
     final private List<TS> tsList = new ArrayList<TS>();
 
-    final synchronized public TS addOrUpdate(final long orderId, final BigDecimal bought, final BigDecimal amount, final BigDecimal lostCut, final BigDecimal tralingStop) {
+    final synchronized public TS addOrUpdateTs(final long orderId, final BigDecimal bought, final BigDecimal amount, final BigDecimal tralingStop) {
         for (TS ts : tsList) {
             if (ts.orderId == orderId) {
                 ts.resetTralingStop(tralingStop);
@@ -32,7 +32,20 @@ public class TSManager {
                 return ts;
             }
         }
-        TS ts = new TS(orderId, bought, amount, lostCut, tralingStop);
+        TS ts = new TS(orderId, bought, amount, BigDecimal.ZERO, tralingStop);
+        this.tsList.add(ts);
+        return ts;
+    }
+
+    final synchronized public TS addOrUpdateLc(final long orderId, final BigDecimal bought, final BigDecimal amount, final BigDecimal lossCut) {
+        for (TS ts : tsList) {
+            if (ts.orderId == orderId) {
+                ts.resetLostCut(lossCut);
+                logger.debug("ResetLossCut:" + lossCut);
+                return ts;
+            }
+        }
+        TS ts = new TS(orderId, bought, amount, lossCut, BigDecimal.ZERO);
         this.tsList.add(ts);
         return ts;
     }
