@@ -87,9 +87,12 @@ public class BitBankMainFrame extends JPanel {
     private final JLabel jpyBalance = new JLabel();
     private final JLabel btcBalance = new JLabel();
     private final JLabel xrpBalance = new JLabel();
-    private final JLabel sellXRP = new JLabel();
-    private final JLabel sellXRPVo = new JLabel();
+
     private final JLabel buyXRP = new JLabel();
+    private final JLabel sellXRP = new JLabel();
+    private final JLabel spread = new JLabel();
+
+    private final JLabel sellXRPVo = new JLabel();
     private final JLabel buyXRPVo = new JLabel();
 
     //    private final JLabel sellBTC = new JLabel();
@@ -136,6 +139,8 @@ public class BitBankMainFrame extends JPanel {
 
                 buyXRP.setText(hoge.data.buy.toPlainString());
 
+                spread.setText(hoge.data.sell.subtract(hoge.data.buy).toPlainString());
+
                 model.updRowData(hoge);
 
                 return false;
@@ -173,15 +178,18 @@ public class BitBankMainFrame extends JPanel {
         time.setBounds(10, y1, 300, 20);
         add(time);
 
-        jpyBalance.setBounds(310, y1, 300, 20);
-        add(jpyBalance);
-        btcBalance.setBounds(310, y2, 300, 20);
-        add(btcBalance);
-        xrpBalance.setBounds(310, y3, 300, 20);
-        add(xrpBalance);
-
+        final int x2 = 330;
+        {
+            jpyBalance.setBounds(x2, y1, 300, 20);
+            add(jpyBalance);
+            btcBalance.setBounds(x2, y2, 300, 20);
+            add(btcBalance);
+            xrpBalance.setBounds(x2, y3, 300, 20);
+            add(xrpBalance);
+        }
         {
             buyXRP.setBounds(10, y2, w1, 20);
+            buyXRP.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
             buyXRP.setHorizontalAlignment(SwingConstants.RIGHT);
             buyXRP.setForeground(Color.BLUE);
             add(buyXRP);
@@ -194,7 +202,8 @@ public class BitBankMainFrame extends JPanel {
              */
         }
         {
-            sellXRP.setBounds(10 + w1, y2, w1, 20);
+            sellXRP.setBounds(10 + w1 + 1, y2, w1, 20);
+            sellXRP.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
             sellXRP.setHorizontalAlignment(SwingConstants.RIGHT);
             sellXRP.setForeground(Color.PINK);
             add(sellXRP);
@@ -205,6 +214,13 @@ public class BitBankMainFrame extends JPanel {
             sellXRPVo.setForeground(Color.WHITE);
             add(sellXRPVo);
             */
+        }
+        {
+            spread.setBounds(10 + (w1 + 1) * 2, y2, w1, 20);
+            spread.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+            spread.setHorizontalAlignment(SwingConstants.RIGHT);
+            // spread.setForeground(Color.PINK);
+            add(spread);
         }
         //        sellBTC.setBounds(10, y3, w1, 20);
         //        sellBTC.setHorizontalAlignment(SwingConstants.RIGHT);
@@ -474,7 +490,7 @@ public class BitBankMainFrame extends JPanel {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                } , 0, 3, TimeUnit.SECONDS);
+                }, 0, 3, TimeUnit.SECONDS);
             }
         } catch (Exception e) {
             e.printStackTrace();

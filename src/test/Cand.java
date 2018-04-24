@@ -18,8 +18,8 @@ public class Cand implements Runnable {
 
     public void execute() throws Exception {
         final int period = 20;
-        final int limit = period + 10;
-        final CandleType candleType = CandleType._5MIN;
+        final int limit = period + 100;
+        final CandleType candleType = CandleType._1MIN;
         final CurrencyPair pair = Config.me().getPair(); //CurrencyPair.XRP_JPY;
         final int round = 4;
         Exchange<CurrencyPair, CandleType> xxx = new BitbankExchange();
@@ -30,7 +30,8 @@ public class Cand implements Runnable {
         for (int ii = 0; ii < candleValueList.size(); ii++) {
             // open, high, low, close, volume, date
             CandleValue ohlcv = candleValueList.get(ii);
-            System.out.print(String.format("%s\t%s\t%s\t%s\t%s", DateUtil.me().format1(ohlcv.time), ohlcv.open, ohlcv.high, ohlcv.low, ohlcv.close));
+            //System.out.print(String.format("%s\t%s\t%s\t%s\t%s", DateUtil.me().format1(ohlcv.time), ohlcv.open, ohlcv.high, ohlcv.low, ohlcv.close));
+            System.out.print(String.format("%s\t%s\t%s\t%s\t%s", Long.toString(ohlcv.time), ohlcv.open, ohlcv.high, ohlcv.low, ohlcv.close));
             BollValue bollRow = bollValueList.get(ii);
             System.out.print(String.format("\t|\t%s\t%s\t%s\t%s\t%s", bollRow.ma, bollRow.high1, bollRow.high2, bollRow.low1, bollRow.low2));
             if (bollRow.isValid()) {

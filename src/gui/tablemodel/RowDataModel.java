@@ -40,7 +40,7 @@ public class RowDataModel extends DefaultTableModel {
             new ColumnContext("OrderId", Long.class, false, 100), //
             new ColumnContext("Pair", String.class, false, 80), //
             new ColumnContext("Side", String.class, false, 60), //
-            new ColumnContext("Executed Amount", BigDecimal.class, false, 100), //
+            new ColumnContext("Amount Executed", BigDecimal.class, false, 100), //
             new ColumnContext("Amount", BigDecimal.class, false, 100), //
             new ColumnContext("Price", BigDecimal.class, false, 80), //
             new ColumnContext("Status", String.class, false, 150), //
@@ -48,8 +48,8 @@ public class RowDataModel extends DefaultTableModel {
             new ColumnContext("Buy-Price", BigDecimal.class, false, 100), // buy
             new ColumnContext("Profit", BigDecimal.class, false, 100), // buy
             new ColumnContext("T/P", BigDecimal.class, false, 100), // COL_INDEX_TAKEPROFIT
-            new ColumnContext("TStop", BigDecimal.class, false, 50), // COL_INDEX_TRALINGSTOP
-            new ColumnContext("T/PPrice", BigDecimal.class, false, 80), // COL_INDEX_TAKEPROFIT2
+            new ColumnContext("TStop", BigDecimal.class, false, 60), // COL_INDEX_TRALINGSTOP
+            new ColumnContext("T/PPrice", BigDecimal.class, false, 90), // COL_INDEX_TAKEPROFIT2
             new ColumnContext("L/C", BigDecimal.class, false, 80), // COL_INDEX_LOSTCUT
             new ColumnContext("LastUpd", String.class, false, 130), //
     };

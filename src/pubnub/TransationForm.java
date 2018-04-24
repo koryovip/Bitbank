@@ -55,7 +55,7 @@ public class TransationForm extends JPanel {
         logger.debug("TransationForm start");
         setLayout(null);
         setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-        setPreferredSize(new Dimension(1530, 480));
+        setPreferredSize(new Dimension(1120, 480));
 
         initGUI();
 
@@ -162,7 +162,7 @@ public class TransationForm extends JPanel {
             final int x1 = 25;
             final int height = 20;
             final int padding = 10;
-            final int y1 = 25;
+            final int y1 = 30;
             final int y2 = y1 + height + padding;
             final int y3 = y2 + height + padding;
             final int y4 = y3 + height + padding;
