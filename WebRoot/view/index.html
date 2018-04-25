@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+   <head>
+       <meta charset="utf-8">
+   </head>
+   <body style="height: 100%; margin: 0">
+       <div id="container" style="height: 100%"></div>
+       <script type="text/javascript" src="view/js/jquery-3.2.1.min.js"></script>
+       <script type="text/javascript" src="view/js/echarts.min.js"></script>
+       <script type="text/javascript" src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.20.2.min.js"></script>
+       <script type="text/javascript">
+var dom = document.getElementById("container");
+var myChart = echarts.init(dom);
+var app = {};
+option = null;
+option = {
+    xAxis: {
+        data: []
+    },
+    yAxis: {
+        scale: true,
+    },
+    series: [{
+        type: 'k',
+        data: []
+    }],
+    tooltip: {
+        trigger: 'axis',
+        axisPointer: {
+            type: 'cross'
+        },
+    },
+    dataZoom : {
+        show : true,
+        realtime: true,
+        start : 50,
+        end : 100
+    },
+};
+;
+
+var timestamps = [];
+var categories = [];
+var candlesticks = [];
+if (option && typeof option === "object") {
+    myChart.setOption(option, true);
+
+	$.get('getData').done(function (data) {
+		// console.log(data);
+		if (!data.records) {
+			return;
+		}
+		for (var ii = 0, len = data.records.length; ii < len; ii++) {
+			var row = data.records[ii];
+			timestamps[ii] = row.open_time;
+			categories[ii] = row.open_time2;
+			candlesticks[ii] = [row.open-0, row.close-0, row.high-0, row.low-0];
+		}
+		// console.log(candlesticks);
+		//categories = ['a','b']
+		//candlesticks = [[20, 30, 10, 35],[40, 35, 30, 55]];
+		myChart.setOption({
+	        xAxis: {
+	            data: categories
+	        },
+	        series: [{
+	            name: 'a',
+	        	type: 'candlestick',
+	            data: candlesticks,
+		        markLine: {
+		        	animation: false,
+		            label: {
+		                normal: {
+		                    position: 'end',
+		                    textStyle: {
+		                        color: 'Blue',
+		                        fontSize: 11
+		                    }
+		                }
+		            },
+		        	data: [{
+                        name: 'Y 轴值为 100 的水平线',
+                        value: '32352342',
+                        yAxis: 101.123,
+                    },{
+                        name: 'Y 轴值为 100 的水平线',
+                        value: '32352342',
+                        yAxis: 101.456,
+                    },{
+                    	name: 'nowIndex',
+                    	yAxis: 0
+                    }],
+		            symbol: ['none', 'none']
+		        }
+	        }],
+		});
+		
+		publish();
+	});
+
+    function publish() {
+        pubnub = new PubNub({
+            //publishKey : 'demo',
+            subscribeKey : 'sub-c-e12e9174-dd60-11e6-806b-02ee2ddab7fe'
+        })
+        /*
+        function publishSampleMessage() {
+            console.log("Since we're publishing on subscribe connectEvent, we're sure we'll receive the following publish.");
+            var publishConfig = {
+                channel : "hello_world",
+                message : "Hello from PubNub Docs!"
+            }
+            pubnub.publish(publishConfig, function(status, response) {
+                console.log(status, response);
+            })
+        }
+        */
+        pubnub.addListener({
+            status: function(statusEvent) {
+                if (statusEvent.category === "PNConnectedCategory") {
+                    // publishSampleMessage();
+                }
+            },
+            message: function(message) {
+                // console.log("New Message!!", message);
+                if (!message.message.data.candlestick) {
+                	return;
+                }
+                for(var ii = 0, len = message.message.data.candlestick.length; ii < len; ii++) {
+                	var row = message.message.data.candlestick[ii];
+                	if (row.type !== '1hour') {
+                		continue;
+                	}
+                	// console.log(row);
+                	var timestamp = timestamps[timestamps.length-1];
+                	var categorie = categories[categories.length-1];
+                	var candlestick = candlesticks[candlesticks.length-1];
+                	// console.log(categorie, candlestick);
+                	//console.log(timestamp, row.ohlcv[0][5]);
+                	var open = row.ohlcv[0][0]-0, high = row.ohlcv[0][1]-0, low = row.ohlcv[0][2]-0, close = row.ohlcv[0][3]-0;
+                	if (timestamp-0 === row.ohlcv[0][5]-0) {
+                		// 更新
+                	    candlesticks[candlesticks.length-1] = [open, close, high, low];
+                	} else {
+                		console.log('追加');
+                		// 追加
+                		timestamp[timestamp.length] = timestamp;
+                		categories[categories.length] = timestamp+'';
+                		candlesticks[candlesticks.length] = [open, close, high, low];
+                	}
+                    // console.log(candlesticks[candlesticks.length-1]);
+                    var nowIndex = open <= close ? close : open;
+                    myChart.setOption({
+                        xAxis: {data: categories},
+                        series: [{
+                        	data: candlesticks,
+                        	markLine: {
+                        		data:[{
+                                    name: 'nowIndex',
+                                    yAxis: nowIndex
+                                }]
+                        	}
+                        }],
+                    });
+                    
+                	break;
+                }
+            },
+            presence: function(presenceEvent) {
+                // handle presence
+            }
+        })      
+        console.log("Subscribing..");
+        pubnub.subscribe({
+            channels: ['candlestick_xrp_jpy'] 
+        });
+    };
+
+}
+       </script>
+   </body>
+</html>
