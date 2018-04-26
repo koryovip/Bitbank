@@ -43,7 +43,7 @@ public class SqliteCandle {
                 Calendar cal1 = Calendar.getInstance();
                 Calendar cal2 = Calendar.getInstance();
                 //cal1.set(2017, 5 - 1, 25);
-                cal1.set(2018, 4 - 1, 25);
+                cal1.set(2018, 4 - 1, 20);
                 //cal1.setTime(new Date());
                 cal2.setTime(new Date());
                 get(CurrencyPair.XRP_JPY, CandleType._1MIN, cal1.getTime(), cal2.getTime());

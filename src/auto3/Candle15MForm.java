@@ -209,7 +209,7 @@ public class Candle15MForm extends JPanel {
             table.setFillsViewportHeight(true);
             //table.setComponentPopupMenu(new TablePopupMenu());
 
-            jScrollPane.setBounds(x1, y2, 1500, 300);
+            jScrollPane.setBounds(x1, y2, 1600, 300);
             add(jScrollPane);
         }
     }
@@ -246,9 +246,9 @@ public class Candle15MForm extends JPanel {
     }
 
     private void calc(boolean insert) {
-        BigDecimal B15M_E = new BigDecimal(spinnerB15M_E.getValue().toString()); // 
-        BigDecimal B1H_E = new BigDecimal(spinnerB1H_E.getValue().toString()); // 
-        BigDecimal B4H_E = new BigDecimal(spinnerB4H_E.getValue().toString()); // 
+        BigDecimal B15M_E = new BigDecimal(spinnerB15M_E.getValue().toString()); //
+        BigDecimal B1H_E = new BigDecimal(spinnerB1H_E.getValue().toString()); //
+        BigDecimal B4H_E = new BigDecimal(spinnerB4H_E.getValue().toString()); //
         BigDecimal B1D_E = new BigDecimal(spinnerB1D_E.getValue().toString()); //
         BigDecimal CO_DIFF = new BigDecimal(spinnerCO_DIFF.getValue().toString()); // Close - Open diff
         calc(B15M_E, B1H_E, B4H_E, B1D_E, CO_DIFF, insert);
@@ -317,13 +317,15 @@ public class Candle15MForm extends JPanel {
                     startAmount = startAmount.divide(row.open, 4, RoundingMode.DOWN).multiply(row.close);
                 }
             }
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    JScrollBar scrollBar = jScrollPane.getVerticalScrollBar();
-                    scrollBar.setValue(scrollBar.getMaximum());
-                }
-            });
+            if (insert) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        JScrollBar scrollBar = jScrollPane.getVerticalScrollBar();
+                        scrollBar.setValue(scrollBar.getMaximum());
+                    }
+                });
+            }
             // System.out.println(String.format("Trade:%d, Balance:%s", tradeCount, startAmount));
         }
     }

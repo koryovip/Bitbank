@@ -19,6 +19,9 @@ public class Candle15MWatcher extends BBReal {
 
     protected void onMessage(PubNub pubnub, PNMessageResult message, pubnub.json.candlestick.Message hoge) {
         for (Candlestick candle : hoge.data.candlestick) {
+            if (candle == null || candle.type == null) {
+                continue;
+            }
             if ("15min".equals(candle.type)) {
                 updater.doUpdate(candle);
                 break;
@@ -37,7 +40,7 @@ public class Candle15MWatcher extends BBReal {
     @Override
     protected List<String> channels() {
         return Arrays.asList(super.getFullChannelName(KRPubNubChannel.candlestick, "xrp_jpy") //
-                , super.getFullChannelName(KRPubNubChannel.ticker, "xrp_jpy") //
+        , super.getFullChannelName(KRPubNubChannel.ticker, "xrp_jpy") //
         );
     }
 }
