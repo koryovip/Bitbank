@@ -24,15 +24,17 @@ public class Candle15MTableModel extends KRTableModel {
                 new ColumnContext("MA320(4H)", BigDecimal.class, false, 90), //
                 new ColumnContext("MA1920(1D)", BigDecimal.class, false, 90), // order date
                 //
-                new ColumnContext("MA20(15M)", BigDecimal.class, false, 90), //
-                new ColumnContext("MA80(1H)", BigDecimal.class, false, 90), //
-                new ColumnContext("MA320(4H)", BigDecimal.class, false, 90), //
-                new ColumnContext("MA1920(1D)", BigDecimal.class, false, 90), // order date
+                new ColumnContext("*MA20(15M)", BigDecimal.class, false, 90), //
+                new ColumnContext("*MA80(1H)", BigDecimal.class, false, 90), //
+                new ColumnContext("*MA320(4H)", BigDecimal.class, false, 90), //
+                new ColumnContext("*MA1920(1D)", BigDecimal.class, false, 90), // order date
                 //
                 new ColumnContext("MA", String.class, false, 60), // 距離
                 new ColumnContext("C-O", BigDecimal.class, false, 60), // COL_INDEX_PROFIT_NORMAL
                 new ColumnContext("Up/Down", String.class, false, 60), // COL_INDEX_PROFIT_BY_TS
                 new ColumnContext("買い？", String.class, false, 60), // COL_INDEX_TRALINGSTOP
+                // 隠し
+                new ColumnContext("OPENTIME", Long.class, false, 0), // COL_INDEX_TRALINGSTOP
         });
     }
 
@@ -62,6 +64,42 @@ public class Candle15MTableModel extends KRTableModel {
                 , row.closeOpenDiff //
                 , row.isUp ? "↑" : "↓" //
                 , row.buy9 ? "買" : "―" //
+                // 隠し
+                , row.openTime //
         });
+    }
+
+    private final int COL_INX_OPT = 18;
+
+    public void updRow(Candle15M row) {
+        int rows = super.getRowCount();
+        for (int ii = rows - 1; ii >= 0; ii--) {
+            long openTime = (long) super.getValueAt(ii, COL_INX_OPT);
+            if (row.openTime == openTime) {
+                // System.out.println("Find Data at " + ii);
+                updateValue(row, ii);
+                break;
+            }
+        }
+    }
+
+    private void updateValue(final Candle15M row, final int ii) {
+        int colIndex = 2;
+        super.setValueAt(row.open, ii, colIndex++);
+        super.setValueAt(row.high, ii, colIndex++);
+        super.setValueAt(row.low, ii, colIndex++);
+        super.setValueAt(row.close, ii, colIndex++);
+        super.setValueAt(row.ma_20_15M, ii, colIndex++);
+        super.setValueAt(row.ma_20_1H, ii, colIndex++);
+        super.setValueAt(row.ma_20_4H, ii, colIndex++);
+        super.setValueAt(row.ma_20_1D, ii, colIndex++);
+        super.setValueAt(row.dma_20_15M, ii, colIndex++);
+        super.setValueAt(row.dma_20_1H, ii, colIndex++);
+        super.setValueAt(row.dma_20_4H, ii, colIndex++);
+        super.setValueAt(row.dma_20_1D, ii, colIndex++);
+        super.setValueAt(row.checkMA ? "〇" : "×", ii, colIndex++);
+        super.setValueAt(row.closeOpenDiff, ii, colIndex++);
+        super.setValueAt(row.isUp ? "↑" : "↓", ii, colIndex++);
+        super.setValueAt(row.buy9 ? "買" : "―", ii, colIndex++);
     }
 }

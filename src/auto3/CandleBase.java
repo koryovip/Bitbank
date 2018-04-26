@@ -4,13 +4,17 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 public abstract class CandleBase {
-    public long openTime;
+    final public long openTime;
     public BigDecimal open;
     public BigDecimal high;
     public BigDecimal low;
     public BigDecimal close;
 
     private Date openTimeDt = null;
+
+    public CandleBase(long openTime) {
+        this.openTime = openTime;
+    }
 
     public Date getOpenTimeDt() {
         if (openTimeDt == null) {

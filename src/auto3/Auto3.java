@@ -56,8 +56,8 @@ public class Auto3 {
                 List<Candle15M> infos = new ArrayList<Candle15M>(records.size());
                 for (int ii = 0, len = records.size(); ii < len; ii++) {
                     Record record = records.get(ii);
-                    Candle15M row = new Candle15M();
-                    row.openTime = Long.parseLong(record.getStr("open_time"));
+                    Candle15M row = new Candle15M(Long.parseLong(record.getStr("open_time")));
+                    // row.openTime = Long.parseLong(record.getStr("open_time"));
                     row.open = new BigDecimal(record.getStr("open"));
                     row.high = new BigDecimal(record.getStr("high"));
                     row.low = new BigDecimal(record.getStr("low"));

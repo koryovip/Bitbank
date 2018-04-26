@@ -4,6 +4,10 @@ import java.math.BigDecimal;
 
 public class Candle15M extends CandleBase {
 
+    public Candle15M(long openTime) {
+        super(openTime);
+    }
+
     /**15m*/
     public BigDecimal ma_20_15M;
     /**1h*/

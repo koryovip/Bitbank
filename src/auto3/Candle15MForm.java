@@ -17,10 +17,12 @@ import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.WindowConstants;
@@ -37,7 +39,9 @@ import com.jfinal.template.source.ClassPathSourceFactory;
 import gui.action.GUIController;
 import gui.action.LongSpanBtnAction;
 import gui.renderer.StripeTableRenderer;
+import pubnub.json.candlestick.Candlestick;
 import utils.DateUtil;
+import utils.OtherUtil;
 import utils.SwingUtil;
 
 public class Candle15MForm extends JPanel {
@@ -65,6 +69,44 @@ public class Candle15MForm extends JPanel {
                 final int startMonth = 3;
                 final float period = 15.0f;
                 initDB(startMonth, period);
+                calc(true);
+                new Candle15MWatcher(new Candle15MWatcherUpdater() {
+                    boolean init = false;
+
+                    @Override
+                    public void doUpdate(Candlestick candle) {
+                        // System.out.println(candle);
+                        Candle15M last = OtherUtil.me().lastItem(datas);
+                        if (!init) {
+                            if (last.openTime != candle.openTime()) {
+                                System.err.println("データ足りません");
+                                return;
+                            }
+                            init = true;
+                        }
+                        if (!init) {
+                            return;
+                        }
+                        if (last.openTime != candle.openTime()) {
+                            Candle15M newRow = new Candle15M(candle.openTime());
+                            newRow.open = candle.open();
+                            newRow.high = candle.high();
+                            newRow.low = candle.low();
+                            newRow.close = candle.close();
+                            datas.add(newRow);
+                            calc(false);
+                            model.addRow(newRow);
+                        } else {
+                            last.open = candle.open();
+                            last.high = candle.high();
+                            last.low = candle.low();
+                            last.close = candle.close();
+                            calc(false);
+                            model.updRow(last);
+                        }
+                        // calc();
+                    }
+                }).monitor();
             }
         });
     }
@@ -74,6 +116,7 @@ public class Candle15MForm extends JPanel {
     private final JTable table = new JTable(model) {
         private static final long serialVersionUID = 8304794967568437905L;
     };
+    private final JScrollPane jScrollPane = new JScrollPane(table);
 
     static private final int fontSize = 14;
     private JSpinner spinnerB15M_E;
@@ -124,7 +167,6 @@ public class Candle15MForm extends JPanel {
             }
         }
         {
-
             JButton btn = new JButton("Calc");
             btn.setFont(font14);
             btn.setBounds(xx, y1, 100, tableRowHight);
@@ -137,12 +179,7 @@ public class Candle15MForm extends JPanel {
 
                 @Override
                 public void doClick(ActionEvent event) throws Exception {
-                    BigDecimal B15M_E = new BigDecimal(spinnerB15M_E.getValue().toString()); // 
-                    BigDecimal B1H_E = new BigDecimal(spinnerB1H_E.getValue().toString()); // 
-                    BigDecimal B4H_E = new BigDecimal(spinnerB4H_E.getValue().toString()); // 
-                    BigDecimal B1D_E = new BigDecimal(spinnerB1D_E.getValue().toString()); //
-                    BigDecimal CO_DIFF = new BigDecimal(spinnerCO_DIFF.getValue().toString()); // Close - Open diff
-                    calc(B15M_E, B1H_E, B4H_E, B1D_E, CO_DIFF, 3);
+                    calc(true);
                 }
             });
             add(btn);
@@ -171,12 +208,10 @@ public class Candle15MForm extends JPanel {
             table.setAutoCreateRowSorter(true);
             table.setFillsViewportHeight(true);
             //table.setComponentPopupMenu(new TablePopupMenu());
-            final JScrollPane jScrollPane = new JScrollPane(table);
-            jScrollPane.setBounds(x1, y2, 1500, 300);
 
+            jScrollPane.setBounds(x1, y2, 1500, 300);
             add(jScrollPane);
         }
-
     }
 
     private void initDB(final int startM, final float period) {
@@ -198,8 +233,8 @@ public class Candle15MForm extends JPanel {
             datas = new ArrayList<Candle15M>(records.size());
             for (int ii = 0, len = records.size(); ii < len; ii++) {
                 Record record = records.get(ii);
-                final Candle15M row = new Candle15M();
-                row.openTime = Long.parseLong(record.getStr("open_time"));
+                final Candle15M row = new Candle15M(Long.parseLong(record.getStr("open_time")));
+                // row.openTime = Long.parseLong(record.getStr("open_time"));
                 row.open = new BigDecimal(record.getStr("open"));
                 row.high = new BigDecimal(record.getStr("high"));
                 row.low = new BigDecimal(record.getStr("low"));
@@ -210,7 +245,16 @@ public class Candle15MForm extends JPanel {
         }
     }
 
-    private void calc(final BigDecimal B15M_E, final BigDecimal B1H_E, final BigDecimal B4H_E, final BigDecimal B1D_E, final BigDecimal CO_DIFF, int startM) {
+    private void calc(boolean insert) {
+        BigDecimal B15M_E = new BigDecimal(spinnerB15M_E.getValue().toString()); // 
+        BigDecimal B1H_E = new BigDecimal(spinnerB1H_E.getValue().toString()); // 
+        BigDecimal B4H_E = new BigDecimal(spinnerB4H_E.getValue().toString()); // 
+        BigDecimal B1D_E = new BigDecimal(spinnerB1D_E.getValue().toString()); //
+        BigDecimal CO_DIFF = new BigDecimal(spinnerCO_DIFF.getValue().toString()); // Close - Open diff
+        calc(B15M_E, B1H_E, B4H_E, B1D_E, CO_DIFF, insert);
+    }
+
+    synchronized private void calc(final BigDecimal B15M_E, final BigDecimal B1H_E, final BigDecimal B4H_E, final BigDecimal B1D_E, final BigDecimal CO_DIFF, boolean insert) {
         //        System.out.println(B15M_E);
         //        System.out.println(B1H_E);
         //        System.out.println(B4H_E);
@@ -242,7 +286,9 @@ public class Candle15MForm extends JPanel {
                 row.close_open(CO_DIFF);
             }
 
-            model.clear();
+            if (insert) {
+                model.clear();
+            }
             for (int ii = 0, len = datas.size(); ii < len; ii++) {
                 Candle15M row = datas.get(ii);
                 if (row.ma_20_15M == null || row.ma_20_1H == null || row.ma_20_4H == null || row.ma_20_1D == null) {
@@ -262,15 +308,23 @@ public class Candle15MForm extends JPanel {
                 row.buy9 = (row.checkMA) && (rowP1.isUp);
 
                 // log(row);
-                model.addRow(row);
+                if (insert) {
+                    model.addRow(row);
+                }
 
                 if (row.buy9) {
                     tradeCount++;
                     startAmount = startAmount.divide(row.open, 4, RoundingMode.DOWN).multiply(row.close);
                 }
             }
-
-            System.out.println(String.format("Trade:%d, Balance:%s", tradeCount, startAmount));
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    JScrollBar scrollBar = jScrollPane.getVerticalScrollBar();
+                    scrollBar.setValue(scrollBar.getMaximum());
+                }
+            });
+            // System.out.println(String.format("Trade:%d, Balance:%s", tradeCount, startAmount));
         }
     }
 
