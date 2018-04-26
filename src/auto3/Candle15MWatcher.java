@@ -23,7 +23,7 @@ public class Candle15MWatcher extends BBReal {
                 continue;
             }
             if ("15min".equals(candle.type)) {
-                updater.doUpdate(candle);
+                updater.doUpdate(hoge.data.timestamp, candle);
                 break;
             }
         }

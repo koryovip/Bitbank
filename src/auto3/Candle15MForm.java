@@ -11,11 +11,13 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -54,6 +56,9 @@ public class Candle15MForm extends JPanel {
         return singleton;
     }
 
+    private BigDecimal balance = new BigDecimal(100 * 10000);
+    private BigDecimal hold = BigDecimal.ZERO;
+
     private Candle15MForm() {
         logger.debug("Candle15MForm start");
         setLayout(null);
@@ -74,7 +79,7 @@ public class Candle15MForm extends JPanel {
                     boolean init = false;
 
                     @Override
-                    public void doUpdate(Candlestick candle) {
+                    public void doUpdate(final long timestamp, final Candlestick candle) {
                         // System.out.println(candle);
                         Candle15M last = OtherUtil.me().lastItem(datas);
                         if (!init) {
@@ -96,6 +101,18 @@ public class Candle15MForm extends JPanel {
                             datas.add(newRow);
                             calc(false);
                             model.addRow(newRow);
+
+                            Candle15M last1 = OtherUtil.me().lastItem(datas);
+                            if (!last1.buy9) {
+                                System.out.println(String.format("[%s] 売買しない", DateUtil.me().format1(timestamp)));
+                                return;
+                            }
+                            if (hold.compareTo(BigDecimal.ZERO) > 0) {
+                                return;
+                            }
+                            // send buy order
+                            hold = balance.divide(candle.open());
+                            System.out.println(String.format("[%s] %sで買い。hold:%s", DateUtil.me().format1(timestamp), candle.open(), hold));
                         } else {
                             last.open = candle.open();
                             last.high = candle.high();
@@ -103,6 +120,29 @@ public class Candle15MForm extends JPanel {
                             last.close = candle.close();
                             calc(false);
                             model.updRow(last);
+
+                            /*Candle15M last1 = OtherUtil.me().lastItem(datas);
+                            if (!last1.buy9) {
+                                System.out.println(String.format("[%s] 売買しない", DateUtil.me().format0(timestamp)));
+                                return;
+                            }*/
+                            // 売り条件は、持っていたらだけです。売買条件は途中で変わるため。
+                            if (hold.compareTo(BigDecimal.ZERO) <= 0) {
+                                return;
+                            }
+                            Calendar cal1 = Calendar.getInstance();
+                            cal1.setTime(new Date(timestamp));
+                            int min = cal1.get(Calendar.MINUTE);
+                            int sec = cal1.get(Calendar.SECOND);
+                            if (!(min == 14 || min == 29 || min == 44 || min == 59)) {
+                                return;
+                            }
+                            if (sec < 50) {
+                                return;
+                            }
+                            // send sell order
+                            balance = hold.multiply(candle.close());
+                            System.out.println(String.format("[%s] %sで買い。balance:%s", DateUtil.me().format1(timestamp), candle.close(), balance));
                         }
                         // calc();
                     }
@@ -124,6 +164,9 @@ public class Candle15MForm extends JPanel {
     private JSpinner spinnerB4H_E;
     private JSpinner spinnerB1D_E;
     private JSpinner spinnerCO_DIFF;
+
+    private JLabel simTransCount = new JLabel();
+    private JLabel simBalance = new JLabel();
 
     private void initGUI() {
         final int x1 = 20;
@@ -211,6 +254,15 @@ public class Candle15MForm extends JPanel {
 
             jScrollPane.setBounds(x1, y2, 1600, 300);
             add(jScrollPane);
+        }
+        {
+            simTransCount.setBounds(x1, 400, 100, 20);
+            simTransCount.setText("0");
+            add(simTransCount);
+
+            simBalance.setBounds(x1 + 110, 400, 100, 20);
+            simBalance.setText("0");
+            add(simBalance);
         }
     }
 
@@ -327,6 +379,8 @@ public class Candle15MForm extends JPanel {
                 });
             }
             // System.out.println(String.format("Trade:%d, Balance:%s", tradeCount, startAmount));
+            simTransCount.setText(Integer.toString(tradeCount));
+            simBalance.setText(startAmount.toPlainString());
         }
     }
 
