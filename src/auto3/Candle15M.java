@@ -46,4 +46,19 @@ public class Candle15M extends CandleBase {
                 && this.dma_20_1D.compareTo(d) > 0 //
         ;
     }
+
+    public void reset() {
+        ma_20_15M = null;
+        ma_20_1H = null;
+        ma_20_4H = null;
+        ma_20_1D = null;
+        dma_20_15M = null;
+        dma_20_1H = null;
+        dma_20_4H = null;
+        dma_20_1D = null;
+        closeOpenDiff = null;
+        checkMA = false;
+        isUp = false;
+        buy9 = false;
+    }
 }

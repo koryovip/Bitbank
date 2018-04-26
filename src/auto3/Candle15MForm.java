@@ -62,11 +62,14 @@ public class Candle15MForm extends JPanel {
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                initDB();
+                final int startMonth = 3;
+                final float period = 15.0f;
+                initDB(startMonth, period);
             }
         });
     }
 
+    private List<Candle15M> datas = null;
     private final Candle15MTableModel model = new Candle15MTableModel();
     private final JTable table = new JTable(model) {
         private static final long serialVersionUID = 8304794967568437905L;
@@ -176,7 +179,7 @@ public class Candle15MForm extends JPanel {
 
     }
 
-    private void initDB() {
+    private void initDB(final int startM, final float period) {
         DruidPlugin dp = new DruidPlugin("jdbc:sqlite:bitbank@xrp_jpy.db", "", "");
         //DruidPlugin dp = new DruidPlugin("jdbc:sqlite::memory:", "", "");
         ActiveRecordPlugin arp = new ActiveRecordPlugin(dp);
@@ -184,22 +187,6 @@ public class Candle15MForm extends JPanel {
         arp.addSqlTemplate("all.sql");
         dp.start();
         arp.start();
-    }
-
-    private void calc(final BigDecimal B15M_E, final BigDecimal B1H_E, final BigDecimal B4H_E, final BigDecimal B1D_E, final BigDecimal CO_DIFF, int startM) {
-//        System.out.println(B15M_E);
-//        System.out.println(B1H_E);
-//        System.out.println(B4H_E);
-//        System.out.println(B1D_E);
-//        System.out.println(CO_DIFF);
-        int tradeCount = 0;
-        BigDecimal startAmount = new BigDecimal("10000");
-
-        final float period = 15.0f;
-        final BigDecimal B15M = new BigDecimal(20); // 15m
-        final BigDecimal B1H = new BigDecimal(20 * 4); // 1h
-        final BigDecimal B4H = new BigDecimal(20 * 4 * 4); // 4h
-        final BigDecimal B1D = new BigDecimal(20 * 4 * 4 * 6); // 1d
 
         {
             Calendar cal1 = Calendar.getInstance();
@@ -208,39 +195,60 @@ public class Candle15MForm extends JPanel {
             System.out.println(DateUtil.me().format1(cal1.getTime()));
             System.out.println(cal1.getTimeInMillis());
             List<Record> records = Db.find(Db.getSql("candles"), period, cal1.getTimeInMillis(), cal1.getTimeInMillis());
-            final Ifohlc ifc = new Ifohlc() {
-                @Override
-                public BigDecimal getClose(int ii) {
-                    return new BigDecimal(records.get(ii).getStr("close"));
-                }
-            };
-            List<Candle15M> infos = new ArrayList<Candle15M>(records.size());
+            datas = new ArrayList<Candle15M>(records.size());
             for (int ii = 0, len = records.size(); ii < len; ii++) {
                 Record record = records.get(ii);
-                Candle15M row = new Candle15M();
+                final Candle15M row = new Candle15M();
                 row.openTime = Long.parseLong(record.getStr("open_time"));
                 row.open = new BigDecimal(record.getStr("open"));
                 row.high = new BigDecimal(record.getStr("high"));
                 row.low = new BigDecimal(record.getStr("low"));
                 row.close = new BigDecimal(record.getStr("close"));
 
-                row.ma_20_15M = calcMA(ifc, ii, B15M, 4);
-                row.ma_20_1H = calcMA(ifc, ii, B1H, 4);
-                row.ma_20_4H = calcMA(ifc, ii, B4H, 4);
-                row.ma_20_1D = calcMA(ifc, ii, B1D, 4);
+                datas.add(row);
+            }
+        }
+    }
 
+    private void calc(final BigDecimal B15M_E, final BigDecimal B1H_E, final BigDecimal B4H_E, final BigDecimal B1D_E, final BigDecimal CO_DIFF, int startM) {
+        //        System.out.println(B15M_E);
+        //        System.out.println(B1H_E);
+        //        System.out.println(B4H_E);
+        //        System.out.println(B1D_E);
+        //        System.out.println(CO_DIFF);
+        int tradeCount = 0;
+        BigDecimal startAmount = new BigDecimal("10000");
+
+        final BigDecimal B15M = new BigDecimal(20); // 15m
+        final BigDecimal B1H = new BigDecimal(20 * 4); // 1h
+        final BigDecimal B4H = new BigDecimal(20 * 4 * 4); // 4h
+        final BigDecimal B1D = new BigDecimal(20 * 4 * 4 * 6); // 1d
+
+        {
+            final int round = 4;
+            final Ifohlc ifc = new Ifohlc() {
+                @Override
+                public BigDecimal getClose(int ii) {
+                    return datas.get(ii).close;
+                }
+            };
+            for (int ii = 0, len = datas.size(); ii < len; ii++) {
+                Candle15M row = datas.get(ii);
+                row.reset();
+                row.ma_20_15M = calcMA(ifc, ii, B15M, round);
+                row.ma_20_1H = calcMA(ifc, ii, B1H, round);
+                row.ma_20_4H = calcMA(ifc, ii, B4H, round);
+                row.ma_20_1D = calcMA(ifc, ii, B1D, round);
                 row.close_open(CO_DIFF);
-
-                infos.add(row);
             }
 
             model.clear();
-            for (int ii = 0, len = infos.size(); ii < len; ii++) {
-                Candle15M row = infos.get(ii);
+            for (int ii = 0, len = datas.size(); ii < len; ii++) {
+                Candle15M row = datas.get(ii);
                 if (row.ma_20_15M == null || row.ma_20_1H == null || row.ma_20_4H == null || row.ma_20_1D == null) {
                     continue;
                 }
-                Candle15M rowP1 = infos.get(ii - 1);
+                Candle15M rowP1 = datas.get(ii - 1);
                 if (rowP1.ma_20_15M == null || rowP1.ma_20_1H == null || rowP1.ma_20_4H == null || rowP1.ma_20_1D == null) {
                     continue;
                 }
@@ -260,8 +268,8 @@ public class Candle15MForm extends JPanel {
                     tradeCount++;
                     startAmount = startAmount.divide(row.open, 4, RoundingMode.DOWN).multiply(row.close);
                 }
-
             }
+
             System.out.println(String.format("Trade:%d, Balance:%s", tradeCount, startAmount));
         }
     }
