@@ -43,12 +43,12 @@ public class SqliteCandle {
                 Calendar cal1 = Calendar.getInstance();
                 Calendar cal2 = Calendar.getInstance();
                 //cal1.set(2017, 5 - 1, 25);
-                cal1.set(2018, 4 - 1, 20);
+                cal1.set(2018, 4 - 1, 25);
                 //cal1.setTime(new Date());
                 cal2.setTime(new Date());
                 get(CurrencyPair.XRP_JPY, CandleType._1MIN, cal1.getTime(), cal2.getTime());
             }
-
+            boolean aa = false;
             //            Candlestick aaa = BitbankClient.me().bbR.getCandlestick(CurrencyPair.XRP_JPY, CandleType._1MIN, "20180423");
             //            Db.tx(Connection.TRANSACTION_SERIALIZABLE, new IAtom() {
             //                @Override
@@ -60,36 +60,61 @@ public class SqliteCandle {
             //                    return true;
             //                }
             //            });
-            {
+            if (aa) {
                 Calendar cal1 = Calendar.getInstance();
-                cal1.set(2018, 4 - 1, 1, 0, 0, 0);
+                cal1.set(2018, 1 - 1, 1, 0, 0, 0);
                 cal1.set(Calendar.MILLISECOND, 0);
                 System.out.println(DateUtil.me().format1(cal1.getTime()));
                 System.out.println(cal1.getTimeInMillis());
-                List<Record> records = Db.find(Db.getSql("candles"), 60.0, cal1.getTimeInMillis(), cal1.getTimeInMillis());
+                List<Record> records = Db.find(Db.getSql("candles"), 15.0, cal1.getTimeInMillis(), cal1.getTimeInMillis());
                 BigDecimal ppp = new BigDecimal(18);
+                final Ifohlc ifc = new Ifohlc() {
+                    @Override
+                    public BigDecimal getClose(int ii) {
+                        return new BigDecimal(records.get(ii).getStr("close"));
+                    }
+                };
+                BigDecimal B15M = new BigDecimal(20); // 15m
+                BigDecimal B1H = new BigDecimal(20 * 4); // 1h
+                BigDecimal B4H = new BigDecimal(20 * 4 * 4); // 4h
+                BigDecimal B1D = new BigDecimal(20 * 4 * 4 * 6); // 1d
                 for (int ii = 0, len = records.size(); ii < len; ii++) {
                     Record record = records.get(ii);
-                    if (ii < ppp.intValue() - 1) {
-                        System.out.println(String.format("%s\t\"%s\"\t%s\t%s\t%s\t%s", //
-                                record.getStr("open_time"), record.getStr("open_time2"), //
+                    boolean tmp = false;
+                    if (tmp) {
+                        if (ii < ppp.intValue() - 1) {
+                            System.out.println(String.format("%s\t\"%s\"\t%s\t%s\t%s\t%s", //
+                                    record.getStr("open_time"), //
+                                    DateUtil.me().format0(Long.parseLong(record.getStr("open_time"))), //
+                                    record.getStr("open"), record.getStr("high"), //
+                                    record.getStr("low"), record.getStr("close")));
+                            continue;
+                        }
+                        BigDecimal totalH = BigDecimal.ZERO;
+                        BigDecimal totalL = BigDecimal.ZERO;
+                        for (int jj = ii - ppp.intValue() + 1; jj <= ii; jj++) {
+                            totalH = totalH.add(new BigDecimal(records.get(jj).getStr("high")));
+                            totalL = totalL.add(new BigDecimal(records.get(jj).getStr("low")));
+                        }
+                        BigDecimal aH = totalH.divide(ppp, 3, RoundingMode.HALF_UP);
+                        BigDecimal aL = totalL.divide(ppp, 3, RoundingMode.HALF_UP);
+                        System.out.println(String.format("%s\t\"%s\"\t%s\t%s\t%s\t%s\t%s\t%s", //
+                                record.getStr("open_time"), //
+                                DateUtil.me().format0(Long.parseLong(record.getStr("open_time"))), //
                                 record.getStr("open"), record.getStr("high"), //
-                                record.getStr("low"), record.getStr("close")));
-                        continue;
+                                record.getStr("low"), record.getStr("close"), //
+                                aH, aL //
+                        ));
                     }
-                    BigDecimal totalH = BigDecimal.ZERO;
-                    BigDecimal totalL = BigDecimal.ZERO;
-                    for (int jj = ii - ppp.intValue() + 1; jj <= ii; jj++) {
-                        totalH = totalH.add(new BigDecimal(records.get(jj).getStr("high")));
-                        totalL = totalL.add(new BigDecimal(records.get(jj).getStr("low")));
-                    }
-                    BigDecimal aH = totalH.divide(ppp, 3, RoundingMode.HALF_UP);
-                    BigDecimal aL = totalL.divide(ppp, 3, RoundingMode.HALF_UP);
-                    System.out.println(String.format("%s\t\"%s\"\t%s\t%s\t%s\t%s\t%s\t%s", //
-                            record.getStr("open_time"), record.getStr("open_time2"), //
-                            record.getStr("open"), record.getStr("high"), //
-                            record.getStr("low"), record.getStr("close"), //
-                            aH, aL //
+                    System.out.println(String.format("%s\t\"%s\"\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s" //
+                            , record.getStr("open_time") //
+                            , DateUtil.me().format0(Long.parseLong(record.getStr("open_time"))) //
+                            , record.getStr("open"), record.getStr("high") //
+                            , record.getStr("low"), record.getStr("close") //
+                            , calcMA(ifc, ii, B15M, 4) //
+                            , calcMA(ifc, ii, B1H, 4) //
+                            , calcMA(ifc, ii, B4H, 4) //
+                            , calcMA(ifc, ii, B1D, 4) //
                     ));
                 }
             }
@@ -123,6 +148,21 @@ public class SqliteCandle {
             }
             calendar.add(Calendar.DATE, 1);
         } while (calendar.getTime().compareTo(to) <= 0);
-
     }
+
+    private static final BigDecimal calcMA(final Ifohlc ifc, final int index, final BigDecimal length, final int round) {
+        if (index <= length.intValue()) {
+            return null;
+        }
+        BigDecimal result = BigDecimal.ZERO;
+        for (int ii = index - length.intValue() + 1; ii <= index; ii++) {
+            result = result.add(ifc.getClose(ii)); // close
+        }
+        return result.divide(length, round, RoundingMode.HALF_UP);
+    }
+
+    interface Ifohlc {
+        public BigDecimal getClose(int ii);
+    }
+
 }

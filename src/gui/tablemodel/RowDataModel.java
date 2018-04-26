@@ -4,10 +4,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Date;
 
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
-
 import cc.Config;
 import cc.bitbank.entity.Order;
 import cc.bitbank.entity.enums.OrderSide;
@@ -15,7 +11,7 @@ import gui.TS;
 import utils.DateUtil;
 import utils.OtherUtil;
 
-public class RowDataModel extends DefaultTableModel {
+public class RowDataModel extends KRTableModel {
     private static final long serialVersionUID = -813484403607557100L;
     private static int __COL_INDEX__ = 0;
     public static final int COL_INDEX_NO = __COL_INDEX__++;
@@ -36,38 +32,29 @@ public class RowDataModel extends DefaultTableModel {
     public static final int COL_INDEX_PROFIT_BY_LC = __COL_INDEX__++; // LCでExit場合の利益
     public static final int COL_INDEX_LASTUPD = __COL_INDEX__++;
 
-    private static final ColumnContext[] COLUMN_ARRAY = { //
-            new ColumnContext("No", Integer.class, false, 30), //
-            new ColumnContext("OrderId", Long.class, false, 100), //
-            new ColumnContext("Pair", String.class, false, 80), //
-            new ColumnContext("Side", String.class, false, 50), //
-            new ColumnContext("Amount Executed", BigDecimal.class, false, 100), //
-            new ColumnContext("Amount", BigDecimal.class, false, 100), //
-            new ColumnContext("Price", BigDecimal.class, false, 80), //
-            new ColumnContext("Status", String.class, false, 120), //
-            new ColumnContext("Order Date", String.class, false, 130), // order date
-            new ColumnContext("Buy-Price", BigDecimal.class, false, 90), // 距離
-            new ColumnContext("裁量Profit", BigDecimal.class, false, 100), // COL_INDEX_PROFIT_NORMAL
-            new ColumnContext("T/SProfit", BigDecimal.class, false, 100), // COL_INDEX_PROFIT_BY_TS
-            new ColumnContext("TStop", BigDecimal.class, false, 60), // COL_INDEX_TRALINGSTOP
-            new ColumnContext("T/SPrice", BigDecimal.class, false, 90), // COL_INDEX_TRALINGSTOP_PRICE
-            new ColumnContext("L/CPrice", BigDecimal.class, false, 90), // COL_INDEX_LOSSCUT_PRICE
-            new ColumnContext("L/CProfit", BigDecimal.class, false, 100), // COL_INDEX_PROFIT_BY_LC
-            new ColumnContext("LastUpd", String.class, false, 130), //
-    };
-    private int number = 1;
-
-    final public void initColumnSize(TableColumnModel tableColumnModel) {
-        int index = 0;
-        for (ColumnContext context : COLUMN_ARRAY) {
-            TableColumn tableColumn = tableColumnModel.getColumn(index++);
-            tableColumn.setMinWidth(10);
-            tableColumn.setPreferredWidth(context.columnWidth);
-            /*if (index == COL_INDEX_NO) {
-                tableColumn.setWidth(context.columnWidth);
-            }*/
-        }
+    public RowDataModel() {
+        super(new ColumnContext[] { //
+                new ColumnContext("No", Integer.class, false, 30), //
+                new ColumnContext("OrderId", Long.class, false, 100), //
+                new ColumnContext("Pair", String.class, false, 80), //
+                new ColumnContext("Side", String.class, false, 50), //
+                new ColumnContext("Amount Executed", BigDecimal.class, false, 100), //
+                new ColumnContext("Amount", BigDecimal.class, false, 100), //
+                new ColumnContext("Price", BigDecimal.class, false, 80), //
+                new ColumnContext("Status", String.class, false, 120), //
+                new ColumnContext("Order Date", String.class, false, 130), // order date
+                new ColumnContext("Buy-Price", BigDecimal.class, false, 90), // 距離
+                new ColumnContext("裁量Profit", BigDecimal.class, false, 100), // COL_INDEX_PROFIT_NORMAL
+                new ColumnContext("T/SProfit", BigDecimal.class, false, 100), // COL_INDEX_PROFIT_BY_TS
+                new ColumnContext("TStop", BigDecimal.class, false, 60), // COL_INDEX_TRALINGSTOP
+                new ColumnContext("T/SPrice", BigDecimal.class, false, 90), // COL_INDEX_TRALINGSTOP_PRICE
+                new ColumnContext("L/CPrice", BigDecimal.class, false, 90), // COL_INDEX_LOSSCUT_PRICE
+                new ColumnContext("L/CProfit", BigDecimal.class, false, 100), // COL_INDEX_PROFIT_BY_LC
+                new ColumnContext("LastUpd", String.class, false, 130), //
+        });
     }
+
+    private int number = 1;
 
     private final int ROUND = Config.me().getRound1();
 
@@ -253,7 +240,7 @@ public class RowDataModel extends DefaultTableModel {
 
     synchronized public final void clear() {
         this.number = 1;
-        super.setRowCount(0);
+        super._clear();
     }
 
     public Date getOrderDate(Order order) {
@@ -345,37 +332,4 @@ public class RowDataModel extends DefaultTableModel {
         return "SELL".equals(getValueAt(row, COL_INDEX_SIDE).toString());
     }
 
-    @Override
-    public boolean isCellEditable(int row, int col) {
-        return COLUMN_ARRAY[col].isEditable;
-    }
-
-    @Override
-    public Class<?> getColumnClass(int column) {
-        return COLUMN_ARRAY[column].columnClass;
-    }
-
-    @Override
-    public int getColumnCount() {
-        return COLUMN_ARRAY.length;
-    }
-
-    @Override
-    public String getColumnName(int column) {
-        return COLUMN_ARRAY[column].columnName;
-    }
-
-    private static class ColumnContext {
-        public final String columnName;
-        public final Class<?> columnClass;
-        public final boolean isEditable;
-        public final int columnWidth;
-
-        protected ColumnContext(String columnName, Class<?> columnClass, boolean isEditable, int columnWidth) {
-            this.columnName = columnName;
-            this.columnClass = columnClass;
-            this.isEditable = isEditable;
-            this.columnWidth = columnWidth;
-        }
-    }
 }
