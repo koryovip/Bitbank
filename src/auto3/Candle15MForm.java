@@ -111,7 +111,7 @@ public class Candle15MForm extends JPanel {
                                 return;
                             }
                             // send buy order
-                            hold = balance.divide(candle.open());
+                            hold = balance.divide(candle.open(), 4, RoundingMode.DOWN);
                             System.out.println(String.format("[%s] %sで買い。hold:%s", DateUtil.me().format1(timestamp), candle.open(), hold));
                         } else {
                             last.open = candle.open();
