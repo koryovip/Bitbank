@@ -286,7 +286,7 @@ public class Candle15MForm extends KRMainFrame {
             table.setRowHeight(tableRowHight);
             table.setRowMargin(1);
 
-            StripeTableRenderer renderer = new StripeTableRenderer();
+            StripeTableRenderer renderer = new StripeTableRenderer(model);
             table.setDefaultRenderer(String.class, renderer);
             table.setDefaultRenderer(Integer.class, renderer);
             table.setDefaultRenderer(Long.class, renderer);
@@ -417,20 +417,22 @@ public class Candle15MForm extends KRMainFrame {
 
                 // bb
                 BigDecimal bbBase = calcBoll(ifc, ii, 20, 2, 4);
-                row.bb_20_high2 = row.ma_20_15M.add(TWO.multiply(bbBase));
-                row.bb_20_low2 = row.ma_20_15M.subtract(TWO.multiply(bbBase));
+                row.bb_20_high2 = row.ma_20_15M.add(OtherUtil.me().TWO.multiply(bbBase));
+                row.bb_20_low2 = row.ma_20_15M.subtract(OtherUtil.me().TWO.multiply(bbBase));
 
                 row.doCheckMA(B15M_E, B1H_E, B4H_E, B1D_E);
 
-                row.buy9 = (row.checkMA) && (rowP1.isUp) && (checkBefore(datas, ii, MAXContinuingBuy));
-                /*if (row.buy9 && rowP1.bb_20_high2 != null) {
+                {
+                    row.buy9 = (row.checkMA) && (rowP1.isUp) && (checkBefore(datas, ii, MAXContinuingBuy));
+                    /*if (row.buy9 && rowP1.bb_20_high2 != null) {
                     if (rowP1.close.subtract(rowP1.bb_20_high2).compareTo(new BigDecimal("0.7")) >= 0) {
                         row.buy9 = false;
                     }
-                }*/
-                if (!row.buy9) {
-                    // golden cross の場合、強制で買いにする
-                    row.buy9 = goldenCross(datas, ii);
+                    }*/
+                    if (!row.buy9) {
+                        // golden cross の場合、強制で買いにする
+                        row.buy9 = goldenCross(datas, ii);
+                    }
                 }
                 // log(row);
                 if (insert) {

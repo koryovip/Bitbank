@@ -242,7 +242,7 @@ public class BitBankMainFrame extends KRMainFrame {
             table.getTableHeader().setFont(font14);
             table.setRowHeight(tableRowHight);
             table.setRowMargin(1);
-            StripeTableRenderer renderer = new StripeTableRenderer();
+            StripeTableRenderer renderer = new StripeTableRenderer(model);
             table.setDefaultRenderer(String.class, renderer);
             table.setDefaultRenderer(Integer.class, renderer);
             table.setDefaultRenderer(Long.class, renderer);
@@ -487,7 +487,7 @@ public class BitBankMainFrame extends KRMainFrame {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                }, 0, 3, TimeUnit.SECONDS);
+                } , 0, 3, TimeUnit.SECONDS);
             }
         } catch (Exception e) {
             e.printStackTrace();

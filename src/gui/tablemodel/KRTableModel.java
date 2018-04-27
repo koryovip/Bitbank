@@ -53,4 +53,8 @@ public abstract class KRTableModel extends DefaultTableModel {
     final public void _clear() {
         super.setRowCount(0);
     }
+
+    public final int getHorizontalAlignment(int column) {
+        return COLUMN_ARRAY[column].horizontalAlignment;
+    }
 }

@@ -39,9 +39,6 @@ public abstract class KRMainFrame extends JPanel {
         return result.divide(period, round, RoundingMode.HALF_UP);
     }
 
-    final protected BigDecimal ONE = new BigDecimal(1);
-    final protected BigDecimal TWO = new BigDecimal(2);
-
     /**
      * 正規分布を計算
      * @param list
