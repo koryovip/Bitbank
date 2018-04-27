@@ -17,15 +17,12 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -54,7 +51,7 @@ import utils.DateUtil;
 import utils.OtherUtil;
 import utils.StringUtilsKR;
 
-public class BitBankMainFrame extends JPanel {
+public class BitBankMainFrame extends KRMainFrame {
 
     private Logger logger = LogManager.getLogger();
 
@@ -557,11 +554,6 @@ public class BitBankMainFrame extends JPanel {
         //        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
         //        service.schedule(() -> {
         //        } , 2, TimeUnit.SECONDS);
-    }
-
-    public void updateWIndowTitlen(String title) {
-        JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
-        topFrame.setTitle(title);
     }
 
     private Order doSellMARKET(CurrencyPair pair, BigDecimal amount) throws BitbankException, IOException {

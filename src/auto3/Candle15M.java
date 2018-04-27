@@ -26,6 +26,11 @@ public class Candle15M extends CandleBase {
     /**1d*/
     public BigDecimal dma_20_1D;
 
+    /** bb 20日 +2 */
+    public BigDecimal bb_20_high2;
+    /** bb 20日 -2 */
+    public BigDecimal bb_20_low2;
+
     /** MA判断条件 */
     public boolean checkMA;
     /** close-open */

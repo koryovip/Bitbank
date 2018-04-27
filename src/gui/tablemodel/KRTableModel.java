@@ -38,7 +38,11 @@ public abstract class KRTableModel extends DefaultTableModel {
         int index = 0;
         for (ColumnContext context : COLUMN_ARRAY) {
             TableColumn tableColumn = tableColumnModel.getColumn(index++);
-            tableColumn.setMinWidth(10);
+            if (context.columnWidth == 0) {
+                tableColumn.setMinWidth(0);
+            } else {
+                tableColumn.setMinWidth(10);
+            }
             tableColumn.setPreferredWidth(context.columnWidth);
             /*if (index == COL_INDEX_NO) {
                 tableColumn.setWidth(context.columnWidth);

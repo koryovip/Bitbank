@@ -19,7 +19,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
@@ -45,13 +44,14 @@ import cc.bitbank.entity.enums.CandleType;
 import db.SyncCandle;
 import gui.action.GUIController;
 import gui.action.LongSpanBtnAction;
+import gui.form.KRMainFrame;
 import gui.renderer.StripeTableRenderer;
 import pubnub.json.candlestick.Candlestick;
 import utils.DateUtil;
 import utils.OtherUtil;
 import utils.SwingUtil;
 
-public class Candle15MForm extends JPanel {
+public class Candle15MForm extends KRMainFrame {
 
     private Logger logger = LogManager.getLogger();
 
@@ -70,7 +70,6 @@ public class Candle15MForm extends JPanel {
 
     private Candle15MForm() {
         logger.debug("Candle15MForm start");
-        setLayout(null);
         setLayout(null);
         setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
         setPreferredSize(new Dimension(table_width + 40, 480));
@@ -91,6 +90,9 @@ public class Candle15MForm extends JPanel {
                     @Override
                     public void doUpdate(final long timestamp, final Candlestick candle) {
                         // System.out.println(candle);
+                        final String nowStr = DateUtil.me().format1(timestamp);
+                        updateWIndowTitlen(nowStr);
+
                         Candle15M last = OtherUtil.me().lastItem(datas);
                         if (!init) {
                             if (last.openTime != candle.openTime()) {
@@ -118,7 +120,7 @@ public class Candle15MForm extends JPanel {
                             }
                             Candle15M last1 = OtherUtil.me().lastItem(datas);
                             if (!last1.buy9) {
-                                logger.debug("[{}] 売買しない", DateUtil.me().format1(timestamp));
+                                logger.debug("[{}] 売買しない", nowStr);
                                 return;
                             }
                             if (hold.compareTo(BigDecimal.ZERO) > 0) {
@@ -126,8 +128,8 @@ public class Candle15MForm extends JPanel {
                             }
                             // send buy order
                             //hold = balance.divide(candle.open(), 4, RoundingMode.DOWN);
-                            final BigDecimal price = candle.open();
-                            new AutoBuyLimit(Config.me().getPair(), price, AMOUNT) {
+                            final BigDecimal buyPrice = candle.close(); // closeは一番正確。このタイミングでの価格で買う。殆どの場合、openと変わらないはず。
+                            new AutoBuyLimit(Config.me().getPair(), buyPrice, AMOUNT) {
                                 @Override
                                 public void onSuccessed(Order order) {
                                     hold = order.executedAmount;
@@ -138,7 +140,7 @@ public class Candle15MForm extends JPanel {
                                     hold = order.executedAmount;
                                 }
                             }.execute();
-                            logger.debug("[{}]:{}で買い。hold:{}", DateUtil.me().format1(timestamp), price, hold);
+                            logger.debug("[{}]:{}で買い。hold:{}", nowStr, buyPrice, hold);
                         } else {
                             last.open = candle.open();
                             last.high = candle.high();
@@ -184,7 +186,7 @@ public class Candle15MForm extends JPanel {
                                     hold = BigDecimal.ZERO; // TODO 売り残った数量をセット
                                 }
                             }.execute();
-                            logger.debug("[{}]:{}で売り。hold:{}", DateUtil.me().format1(timestamp), price, hold);
+                            logger.debug("[{}]:{}で売り。hold:{}", nowStr, price, hold);
                         }
                         // calc();
                     }
@@ -225,7 +227,7 @@ public class Candle15MForm extends JPanel {
         Font font14 = new Font("MS Gothic", Font.PLAIN, fontSize);
         {
             {
-                spinnerB15M_E = new JSpinner(new SpinnerNumberModel(-0.06, -10, 10, 0.001));
+                spinnerB15M_E = new JSpinner(new SpinnerNumberModel(0, -10, 10, 0.001));
                 spinnerB15M_E.setBounds(xx, y1, 100, 24);
                 add(spinnerB15M_E);
                 xx += (width1 + pad1);
@@ -413,9 +415,19 @@ public class Candle15MForm extends JPanel {
                 row.dma_20_4H = row.ma_20_4H.subtract(rowP1.ma_20_4H);
                 row.dma_20_1D = row.ma_20_1D.subtract(rowP1.ma_20_1D);
 
+                // bb
+                BigDecimal bbBase = calcBoll(ifc, ii, 20, 2, 4);
+                row.bb_20_high2 = row.ma_20_15M.add(TWO.multiply(bbBase));
+                row.bb_20_low2 = row.ma_20_15M.subtract(TWO.multiply(bbBase));
+
                 row.doCheckMA(B15M_E, B1H_E, B4H_E, B1D_E);
 
                 row.buy9 = (row.checkMA) && (rowP1.isUp) && (checkBefore(datas, ii, MAXContinuingBuy));
+                /*if (row.buy9 && rowP1.bb_20_high2 != null) {
+                    if (rowP1.close.subtract(rowP1.bb_20_high2).compareTo(new BigDecimal("0.7")) >= 0) {
+                        row.buy9 = false;
+                    }
+                }*/
                 if (!row.buy9) {
                     // golden cross の場合、強制で買いにする
                     row.buy9 = goldenCross(datas, ii);
@@ -443,17 +455,6 @@ public class Candle15MForm extends JPanel {
             simTransCount.setText(Integer.toString(tradeCount));
             simBalance.setText(startAmount.toPlainString());
         }
-    }
-
-    private final BigDecimal calcMA(final Ifohlc ifc, final int index, final BigDecimal length, final int round) {
-        if (index <= length.intValue()) {
-            return null;
-        }
-        BigDecimal result = BigDecimal.ZERO;
-        for (int ii = index - length.intValue() + 1; ii <= index; ii++) {
-            result = result.add(ifc.getClose(ii)); // close
-        }
-        return result.divide(length, round, RoundingMode.HALF_UP);
     }
 
     /**

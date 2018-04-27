@@ -18,17 +18,20 @@ public class Candle15MTableModel extends KRTableModel {
                 new ColumnContext("High", BigDecimal.class, false, 70), //
                 new ColumnContext("Low", BigDecimal.class, false, 70), //
                 new ColumnContext("Close", BigDecimal.class, false, 70), //
-                //
+                // MA
                 new ColumnContext("MA(15M)", BigDecimal.class, false, 70), //
                 new ColumnContext("MA(1H)", BigDecimal.class, false, 70), //
                 new ColumnContext("MA(4H)", BigDecimal.class, false, 70), //
                 new ColumnContext("MA(1D)", BigDecimal.class, false, 70), // order date
-                //
+                // MA-Calc
                 new ColumnContext("*MA(15M)", BigDecimal.class, false, 70), //
                 new ColumnContext("*MA(1H)", BigDecimal.class, false, 70), //
                 new ColumnContext("*MA(4H)", BigDecimal.class, false, 70), //
                 new ColumnContext("*MA(1D)", BigDecimal.class, false, 70), // order date
-                //
+                // BB
+                new ColumnContext("*BB(L2)", BigDecimal.class, false, 70), // BB 20 -2
+                new ColumnContext("*BB(H2)", BigDecimal.class, false, 70), // BB 20 +2
+                //  
                 new ColumnContext("MA", String.class, false, 40), // 距離
                 new ColumnContext("C-O", BigDecimal.class, false, 60), // COL_INDEX_PROFIT_NORMAL
                 new ColumnContext("Up/Down", String.class, false, 40), // COL_INDEX_PROFIT_BY_TS
@@ -60,6 +63,8 @@ public class Candle15MTableModel extends KRTableModel {
                 , row.dma_20_1H //
                 , row.dma_20_4H //
                 , row.dma_20_1D //
+                , row.bb_20_low2 //
+                , row.bb_20_high2 //
                 , row.checkMA ? "〇" : "×" //
                 , row.closeOpenDiff //
                 , row.isUp ? "↑" : "↓" //
@@ -69,7 +74,7 @@ public class Candle15MTableModel extends KRTableModel {
         });
     }
 
-    private final int COL_INX_OPT = 18;
+    private final int COL_INX_OPT = 20;
 
     public void updRow(Candle15M row) {
         int rows = super.getRowCount();
@@ -97,6 +102,8 @@ public class Candle15MTableModel extends KRTableModel {
         super.setValueAt(row.dma_20_1H, ii, colIndex++);
         super.setValueAt(row.dma_20_4H, ii, colIndex++);
         super.setValueAt(row.dma_20_1D, ii, colIndex++);
+        super.setValueAt(row.bb_20_low2, ii, colIndex++);
+        super.setValueAt(row.bb_20_high2, ii, colIndex++);
         super.setValueAt(row.checkMA ? "〇" : "×", ii, colIndex++);
         super.setValueAt(row.closeOpenDiff, ii, colIndex++);
         super.setValueAt(row.isUp ? "↑" : "↓", ii, colIndex++);
