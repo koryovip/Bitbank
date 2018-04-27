@@ -14,25 +14,25 @@ public class Candle15MTableModel extends KRTableModel {
         super(new ColumnContext[] { //
                 new ColumnContext("No", Integer.class, false, 50), //
                 new ColumnContext("Time", String.class, false, 90), //
-                new ColumnContext("Open", BigDecimal.class, false, 80), //
-                new ColumnContext("High", BigDecimal.class, false, 80), //
-                new ColumnContext("Low", BigDecimal.class, false, 80), //
-                new ColumnContext("Close", BigDecimal.class, false, 80), //
+                new ColumnContext("Open", BigDecimal.class, false, 70), //
+                new ColumnContext("High", BigDecimal.class, false, 70), //
+                new ColumnContext("Low", BigDecimal.class, false, 70), //
+                new ColumnContext("Close", BigDecimal.class, false, 70), //
                 //
-                new ColumnContext("MA(15M)", BigDecimal.class, false, 80), //
-                new ColumnContext("MA(1H)", BigDecimal.class, false, 80), //
-                new ColumnContext("MA(4H)", BigDecimal.class, false, 80), //
-                new ColumnContext("MA(1D)", BigDecimal.class, false, 80), // order date
+                new ColumnContext("MA(15M)", BigDecimal.class, false, 70), //
+                new ColumnContext("MA(1H)", BigDecimal.class, false, 70), //
+                new ColumnContext("MA(4H)", BigDecimal.class, false, 70), //
+                new ColumnContext("MA(1D)", BigDecimal.class, false, 70), // order date
                 //
-                new ColumnContext("*MA(15M)", BigDecimal.class, false, 80), //
-                new ColumnContext("*MA(1H)", BigDecimal.class, false, 80), //
-                new ColumnContext("*MA(4H)", BigDecimal.class, false, 80), //
-                new ColumnContext("*MA(1D)", BigDecimal.class, false, 80), // order date
+                new ColumnContext("*MA(15M)", BigDecimal.class, false, 70), //
+                new ColumnContext("*MA(1H)", BigDecimal.class, false, 70), //
+                new ColumnContext("*MA(4H)", BigDecimal.class, false, 70), //
+                new ColumnContext("*MA(1D)", BigDecimal.class, false, 70), // order date
                 //
                 new ColumnContext("MA", String.class, false, 40), // 距離
                 new ColumnContext("C-O", BigDecimal.class, false, 60), // COL_INDEX_PROFIT_NORMAL
                 new ColumnContext("Up/Down", String.class, false, 40), // COL_INDEX_PROFIT_BY_TS
-                new ColumnContext("買い？", String.class, false, 40), // COL_INDEX_TRALINGSTOP
+                new ColumnContext("買", String.class, false, 40), // COL_INDEX_TRALINGSTOP
                 // 隠し
                 new ColumnContext("OPENTIME", Long.class, false, 0), // COL_INDEX_TRALINGSTOP
         });

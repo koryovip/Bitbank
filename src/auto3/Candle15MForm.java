@@ -16,6 +16,7 @@ import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -111,9 +112,13 @@ public class Candle15MForm extends JPanel {
                             calc(false);
                             model.addRow(newRow);
 
+                            if (!autoTrade.isSelected()) {
+                                // logger.debug("自動取引：OFF");
+                                return;
+                            }
                             Candle15M last1 = OtherUtil.me().lastItem(datas);
                             if (!last1.buy9) {
-                                System.out.println(String.format("[%s] 売買しない", DateUtil.me().format1(timestamp)));
+                                logger.debug("[{}] 売買しない", DateUtil.me().format1(timestamp));
                                 return;
                             }
                             if (hold.compareTo(BigDecimal.ZERO) > 0) {
@@ -142,6 +147,10 @@ public class Candle15MForm extends JPanel {
                             calc(false);
                             model.updRow(last);
 
+                            if (!autoTrade.isSelected()) {
+                                // logger.debug("自動取引：OFF");
+                                return;
+                            }
                             /*Candle15M last1 = OtherUtil.me().lastItem(datas);
                             if (!last1.buy9) {
                                 System.out.println(String.format("[%s] 売買しない", DateUtil.me().format0(timestamp)));
@@ -198,8 +207,12 @@ public class Candle15MForm extends JPanel {
     private JSpinner spinnerB1D_E;
     private JSpinner spinnerCO_DIFF;
 
+    final private int MAXContinuingBuy = 6; // 最大連続買い回数（5～6）がよさそう
+
     private JLabel simTransCount = new JLabel();
     private JLabel simBalance = new JLabel();
+
+    private JCheckBox autoTrade = new JCheckBox("Auto", false);
 
     private void initGUI() {
         final int x1 = 20;
@@ -244,8 +257,8 @@ public class Candle15MForm extends JPanel {
         }
         {
             JButton btn = new JButton("Calc");
-            btn.setFont(font14);
-            btn.setBounds(xx, y1, 100, tableRowHight);
+            // btn.setFont(font14);
+            btn.setBounds(xx, y1, 100, 24);
             btn.addActionListener(new LongSpanBtnAction(btn, new GUIController() {
                 @Override
                 public Component parentComponent() {
@@ -260,7 +273,10 @@ public class Candle15MForm extends JPanel {
             });
             add(btn);
         }
-
+        {
+            autoTrade.setBounds(xx + 110, y1, 100, 24);
+            add(autoTrade);
+        }
         {
             // JTable table = new JTable(model);
             table.setFont(font14);
@@ -399,8 +415,11 @@ public class Candle15MForm extends JPanel {
 
                 row.doCheckMA(B15M_E, B1H_E, B4H_E, B1D_E);
 
-                row.buy9 = (row.checkMA) && (rowP1.isUp);
-
+                row.buy9 = (row.checkMA) && (rowP1.isUp) && (checkBefore(datas, ii, MAXContinuingBuy));
+                if (!row.buy9) {
+                    // golden cross の場合、強制で買いにする
+                    row.buy9 = goldenCross(datas, ii);
+                }
                 // log(row);
                 if (insert) {
                     model.addRow(row);
@@ -435,6 +454,41 @@ public class Candle15MForm extends JPanel {
             result = result.add(ifc.getClose(ii)); // close
         }
         return result.divide(length, round, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * 連続買いを止める
+     * @param datas
+     * @param ii
+     * @param period
+     * @return
+     */
+    private final boolean checkBefore(final List<Candle15M> datas, final int ii, final int period) {
+        if (ii < period) {
+            return true;
+        }
+        for (int pidx = ii - period; pidx < ii; pidx++) {
+            if (!datas.get(pidx).buy9) {
+                // 連続じゃない買いの場合
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private final boolean goldenCross(final List<Candle15M> datas, final int ii) {
+        if (ii == 0) {
+            return false;
+        }
+        final Candle15M p = datas.get(ii);
+        if (p.ma_20_15M.compareTo(p.ma_20_1H) > 0) {
+            final Candle15M p1 = datas.get(ii - 1);
+            if (p1.ma_20_1H.compareTo(p1.ma_20_15M) > 0) {
+                // logger.debug("gold cross : {}", p1.getOpenTimeDt());
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void main(String[] args) {
