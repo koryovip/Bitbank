@@ -12,27 +12,28 @@ import cc.bitbank.entity.enums.OrderSide;
 import cc.bitbank.entity.enums.OrderType;
 import utils.BitbankClient;
 
-public class Seller implements Runnable {
+public abstract class TransactionController {
 
     private Logger logger = LogManager.getLogger();
 
     private final CurrencyPair pair;
     private final BigDecimal price;
     private final BigDecimal amount;
-    private final KRTransaction<Order> transaction;
 
-    public Seller(final CurrencyPair pair, final BigDecimal price, final BigDecimal amount, final KRTransaction<Order> transaction) {
+    protected abstract OrderSide getOrderSide();
+
+    protected abstract OrderType getOrderType();
+
+    public TransactionController(final CurrencyPair pair, final BigDecimal price, final BigDecimal amount) {
         this.pair = pair;
         this.price = price;
         this.amount = amount;
-        this.transaction = transaction;
     }
 
-    @Override
-    public void run() {
+    public void execute(final KRTransaction<Order> transaction) {
         logger.debug("sell(MARKET):{} at {}", amount, price);
         try {
-            Order order = BitbankClient.me().bbW.sendOrder(pair, price, amount, OrderSide.SELL, OrderType.LIMIT);
+            Order order = BitbankClient.me().bbW.sendOrder(pair, price, amount, getOrderSide(), getOrderType());
             if (order == null || order.orderId == 0) {
                 throw new Exception("order is null");
             }
@@ -49,7 +50,7 @@ public class Seller implements Runnable {
                 }
             } while (!order.status.equals("FULLY_FILLED"));
             if (cancelOrder) {
-                // TODO 画面にメッセージ表示？
+                transaction.onGiveUp(order);
             } else {
                 transaction.onSuccess(order);
             }
@@ -60,11 +61,11 @@ public class Seller implements Runnable {
     }
 
     public interface KRTransaction<T> {
+        /** オーダー注文正常終了 */
         public void onTransactionOrder(final T t);
 
+        /** オーダー約定正常終了 */
         public void onSuccess(final T t);
-
-        public void onFailed(Throwable t);
 
         /**
          * オーダーの約定を諦める場合、trueを返す
@@ -73,6 +74,12 @@ public class Seller implements Runnable {
          * @return
          */
         public boolean onTransacting(final T t, final int times);
+
+        /** オーダー諦めた後 */
+        public void onGiveUp(T order);
+
+        /** オーダー異常終了 */
+        public void onFailed(Throwable t);
     }
 
 }

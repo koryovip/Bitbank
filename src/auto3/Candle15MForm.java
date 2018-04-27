@@ -38,6 +38,10 @@ import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.druid.DruidPlugin;
 import com.jfinal.template.source.ClassPathSourceFactory;
 
+import cc.Config;
+import cc.bitbank.entity.Order;
+import cc.bitbank.entity.enums.CandleType;
+import db.SyncCandle;
 import gui.action.GUIController;
 import gui.action.LongSpanBtnAction;
 import gui.renderer.StripeTableRenderer;
@@ -48,29 +52,34 @@ import utils.SwingUtil;
 
 public class Candle15MForm extends JPanel {
 
-    private static final long serialVersionUID = 8307509386386126712L;
     private Logger logger = LogManager.getLogger();
+
+    private static final long serialVersionUID = 8307509386386126712L;
     private static final Candle15MForm singleton = new Candle15MForm();
 
     public static Candle15MForm me() {
         return singleton;
     }
 
-    private BigDecimal balance = new BigDecimal(100 * 10000);
+    // private BigDecimal balance = new BigDecimal(100 * 10000);
     private BigDecimal hold = BigDecimal.ZERO;
+    final private BigDecimal AMOUNT = new BigDecimal(100);
+
+    private final int table_width = 1350;
 
     private Candle15MForm() {
         logger.debug("Candle15MForm start");
         setLayout(null);
         setLayout(null);
         setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-        setPreferredSize(new Dimension(1600, 480));
+        setPreferredSize(new Dimension(table_width + 40, 480));
 
         initGUI();
 
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
+
                 final int startMonth = 3;
                 final float period = 15.0f;
                 initDB(startMonth, period);
@@ -111,8 +120,20 @@ public class Candle15MForm extends JPanel {
                                 return;
                             }
                             // send buy order
-                            hold = balance.divide(candle.open(), 4, RoundingMode.DOWN);
-                            System.out.println(String.format("[%s] %sで買い。hold:%s", DateUtil.me().format1(timestamp), candle.open(), hold));
+                            //hold = balance.divide(candle.open(), 4, RoundingMode.DOWN);
+                            final BigDecimal price = candle.open();
+                            new AutoBuyLimit(Config.me().getPair(), price, AMOUNT) {
+                                @Override
+                                public void onSuccessed(Order order) {
+                                    hold = order.executedAmount;
+                                }
+
+                                @Override
+                                public void onGiveUped(Order order) {
+                                    hold = order.executedAmount;
+                                }
+                            }.execute();
+                            logger.debug("[{}]:{}で買い。hold:{}", DateUtil.me().format1(timestamp), price, hold);
                         } else {
                             last.open = candle.open();
                             last.high = candle.high();
@@ -141,8 +162,20 @@ public class Candle15MForm extends JPanel {
                                 return;
                             }
                             // send sell order
-                            balance = hold.multiply(candle.close());
-                            System.out.println(String.format("[%s] %sで買い。balance:%s", DateUtil.me().format1(timestamp), candle.close(), balance));
+                            // balance = hold.multiply(candle.close());
+                            final BigDecimal price = candle.close();
+                            new AutoSellLimit(Config.me().getPair(), price, hold) {
+                                @Override
+                                public void onSuccessed(Order order) {
+                                    hold = BigDecimal.ZERO;
+                                }
+
+                                @Override
+                                public void onGiveUped(Order order) {
+                                    hold = BigDecimal.ZERO; // TODO 売り残った数量をセット
+                                }
+                            }.execute();
+                            logger.debug("[{}]:{}で売り。hold:{}", DateUtil.me().format1(timestamp), price, hold);
                         }
                         // calc();
                     }
@@ -252,7 +285,7 @@ public class Candle15MForm extends JPanel {
             table.setFillsViewportHeight(true);
             //table.setComponentPopupMenu(new TablePopupMenu());
 
-            jScrollPane.setBounds(x1, y2, 1600, 300);
+            jScrollPane.setBounds(x1, y2, table_width, 300);
             add(jScrollPane);
         }
         {
@@ -275,6 +308,15 @@ public class Candle15MForm extends JPanel {
         dp.start();
         arp.start();
 
+        {
+            SyncCandle.me().create();
+            Date last = SyncCandle.me().last();
+            try {
+                SyncCandle.me().sync(Config.me().getPair(), CandleType._1MIN, last, new Date());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         {
             Calendar cal1 = Calendar.getInstance();
             cal1.set(2018, startM - 1, 1, 0, 0, 0);
