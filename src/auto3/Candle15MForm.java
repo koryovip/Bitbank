@@ -3,10 +3,7 @@ package auto3;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.Font;
 import java.awt.event.ActionEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -17,7 +14,6 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -25,9 +21,6 @@ import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-import javax.swing.WindowConstants;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,6 +35,7 @@ import cc.Config;
 import cc.bitbank.entity.Order;
 import cc.bitbank.entity.enums.CandleType;
 import db.SyncCandle;
+import gui.KRFontManager;
 import gui.action.GUIController;
 import gui.action.LongSpanBtnAction;
 import gui.form.KRMainFrame;
@@ -49,7 +43,6 @@ import gui.renderer.StripeTableRenderer;
 import pubnub.json.candlestick.Candlestick;
 import utils.DateUtil;
 import utils.OtherUtil;
-import utils.SwingUtil;
 
 public class Candle15MForm extends KRMainFrame {
 
@@ -66,13 +59,13 @@ public class Candle15MForm extends KRMainFrame {
     private BigDecimal hold = BigDecimal.ZERO;
     final private BigDecimal AMOUNT = new BigDecimal(100);
 
-    private final int table_width = 1350;
+    private final int table_width = 1720;
 
     private Candle15MForm() {
         logger.debug("Candle15MForm start");
         setLayout(null);
         setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
-        setPreferredSize(new Dimension(table_width + 40, 480));
+        setPreferredSize(new Dimension(table_width + 40, 800));
 
         initGUI();
 
@@ -202,7 +195,7 @@ public class Candle15MForm extends KRMainFrame {
     };
     private final JScrollPane jScrollPane = new JScrollPane(table);
 
-    static private final int fontSize = 14;
+    //static private final int fontSize = KRFontManager.me().fontSize();
     private JSpinner spinnerB15M_E;
     private JSpinner spinnerB1H_E;
     private JSpinner spinnerB4H_E;
@@ -223,8 +216,8 @@ public class Candle15MForm extends KRMainFrame {
         int pad1 = 20;
         final int y1 = 20;
         final int y2 = 50;
-        int tableRowHight = fontSize + 6;
-        Font font14 = new Font("MS Gothic", Font.PLAIN, fontSize);
+        //int tableRowHight = fontSize + 6;
+        // Font font14 = new Font("MS Gothic", Font.PLAIN, fontSize);
         {
             {
                 spinnerB15M_E = new JSpinner(new SpinnerNumberModel(0, -10, 10, 0.001));
@@ -281,9 +274,10 @@ public class Candle15MForm extends KRMainFrame {
         }
         {
             // JTable table = new JTable(model);
-            table.setFont(font14);
-            table.getTableHeader().setFont(font14);
-            table.setRowHeight(tableRowHight);
+            //table.setFont(font14);
+            //table.getTableHeader().setFont(font14);
+            final int setRowHeight = KRFontManager.me().fontSize() + 6;
+            table.setRowHeight(setRowHeight);
             table.setRowMargin(1);
 
             StripeTableRenderer renderer = new StripeTableRenderer(model);
@@ -303,15 +297,15 @@ public class Candle15MForm extends KRMainFrame {
             table.setFillsViewportHeight(true);
             //table.setComponentPopupMenu(new TablePopupMenu());
 
-            jScrollPane.setBounds(x1, y2, table_width, 300);
+            jScrollPane.setBounds(x1, y2, table_width, setRowHeight * 26);
             add(jScrollPane);
         }
         {
-            simTransCount.setBounds(x1, 400, 100, 20);
+            simTransCount.setBounds(x1, 760, 100, 20);
             simTransCount.setText("0");
             add(simTransCount);
 
-            simBalance.setBounds(x1 + 110, 400, 100, 20);
+            simBalance.setBounds(x1 + 110, 760, 160, 20);
             simBalance.setText("0");
             add(simBalance);
         }
@@ -494,36 +488,4 @@ public class Candle15MForm extends KRMainFrame {
         return false;
     }
 
-    public static void main(String[] args) {
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                createAndShowGUI();
-            }
-        });
-    }
-
-    private static void createAndShowGUI() {
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
-            ex.printStackTrace();
-        }
-        JFrame frame = new JFrame("@title@");
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.getContentPane().add(Candle15MForm.me());
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        Font font = new Font("MS Gothic", Font.PLAIN, fontSize);
-        SwingUtil.me().updateFont(Candle15MForm.me(), font);
-        frame.setVisible(true);
-        //frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
-        frame.addWindowListener(new WindowAdapter() {
-            public void windowClosing(WindowEvent e) {
-                // dispose();
-                // System.exit(0); //calling the method is a must
-                System.out.println("windowClosing");
-            }
-        });
-    }
 }
