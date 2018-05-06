@@ -72,10 +72,18 @@ public class Candle15MForm extends KRMainFrame {
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-
+                {
+                    initDB();
+                    Date last = SyncCandle.me().last();
+                    Calendar cal1 = Calendar.getInstance();
+                    cal1.setTime(last);
+                    cal1.add(Calendar.DATE, -1);
+                    getDB(cal1.getTime());
+                }
+                final int startYear = 2018;
                 final int startMonth = 3;
                 final float period = 15.0f;
-                initDB(startMonth, period);
+                initData(startYear, startMonth, period);
                 calc(true);
                 new Candle15MWatcher(new Candle15MWatcherUpdater() {
                     boolean init = false;
@@ -196,6 +204,7 @@ public class Candle15MForm extends KRMainFrame {
     private final JScrollPane jScrollPane = new JScrollPane(table);
 
     //static private final int fontSize = KRFontManager.me().fontSize();
+    private JSpinner spinnerMA_period;
     private JSpinner spinnerB15M_E;
     private JSpinner spinnerB1H_E;
     private JSpinner spinnerB4H_E;
@@ -219,6 +228,12 @@ public class Candle15MForm extends KRMainFrame {
         //int tableRowHight = fontSize + 6;
         // Font font14 = new Font("MS Gothic", Font.PLAIN, fontSize);
         {
+            {
+                spinnerMA_period = new JSpinner(new SpinnerNumberModel(20, 1, 1000, 1));
+                spinnerMA_period.setBounds(xx, y1, 100, 24);
+                add(spinnerMA_period);
+                xx += (width1 + pad1);
+            }
             {
                 spinnerB15M_E = new JSpinner(new SpinnerNumberModel(0, -10, 10, 0.001));
                 spinnerB15M_E.setBounds(xx, y1, 100, 24);
@@ -295,7 +310,8 @@ public class Candle15MForm extends KRMainFrame {
             table.getTableHeader().setReorderingAllowed(false);
             table.setAutoCreateRowSorter(true);
             table.setFillsViewportHeight(true);
-            //table.setComponentPopupMenu(new TablePopupMenu());
+            new Candle15MTablePopup(table);
+            // table.setComponentPopupMenu(new Candle15MTablePopup(table));
 
             jScrollPane.setBounds(x1, y2, table_width, setRowHeight * 26);
             add(jScrollPane);
@@ -311,7 +327,7 @@ public class Candle15MForm extends KRMainFrame {
         }
     }
 
-    private void initDB(final int startM, final float period) {
+    private void initDB() {
         DruidPlugin dp = new DruidPlugin("jdbc:sqlite:bitbank@xrp_jpy.db", "", "");
         //DruidPlugin dp = new DruidPlugin("jdbc:sqlite::memory:", "", "");
         ActiveRecordPlugin arp = new ActiveRecordPlugin(dp);
@@ -320,18 +336,21 @@ public class Candle15MForm extends KRMainFrame {
         dp.start();
         arp.start();
 
-        {
-            SyncCandle.me().create();
-            Date last = SyncCandle.me().last();
-            try {
-                SyncCandle.me().sync(Config.me().getPair(), CandleType._1MIN, last, new Date());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        SyncCandle.me().create();
+    }
+
+    public void getDB(final Date start) {
+        try {
+            SyncCandle.me().sync(Config.me().getPair(), CandleType._1MIN, start, new Date());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+    }
+
+    private void initData(final int startYear, final int startM, final float period) {
         {
             Calendar cal1 = Calendar.getInstance();
-            cal1.set(2018, startM - 1, 1, 0, 0, 0);
+            cal1.set(startYear, startM - 1, 1, 0, 0, 0);
             cal1.set(Calendar.MILLISECOND, 0);
             System.out.println(DateUtil.me().format1(cal1.getTime()));
             System.out.println(cal1.getTimeInMillis());
@@ -351,16 +370,17 @@ public class Candle15MForm extends KRMainFrame {
         }
     }
 
-    private void calc(boolean insert) {
+    synchronized private void calc(boolean insert) {
+        int maPeriod = Integer.parseInt(spinnerMA_period.getValue().toString()); // MA期間（20）
         BigDecimal B15M_E = new BigDecimal(spinnerB15M_E.getValue().toString()); //
         BigDecimal B1H_E = new BigDecimal(spinnerB1H_E.getValue().toString()); //
         BigDecimal B4H_E = new BigDecimal(spinnerB4H_E.getValue().toString()); //
         BigDecimal B1D_E = new BigDecimal(spinnerB1D_E.getValue().toString()); //
         BigDecimal CO_DIFF = new BigDecimal(spinnerCO_DIFF.getValue().toString()); // Close - Open diff
-        calc(B15M_E, B1H_E, B4H_E, B1D_E, CO_DIFF, insert);
+        calc(maPeriod, B15M_E, B1H_E, B4H_E, B1D_E, CO_DIFF, insert);
     }
 
-    synchronized private void calc(final BigDecimal B15M_E, final BigDecimal B1H_E, final BigDecimal B4H_E, final BigDecimal B1D_E, final BigDecimal CO_DIFF, boolean insert) {
+    synchronized private void calc(final int maPeriod, final BigDecimal B15M_E, final BigDecimal B1H_E, final BigDecimal B4H_E, final BigDecimal B1D_E, final BigDecimal CO_DIFF, boolean insert) {
         //        System.out.println(B15M_E);
         //        System.out.println(B1H_E);
         //        System.out.println(B4H_E);
@@ -369,10 +389,10 @@ public class Candle15MForm extends KRMainFrame {
         int tradeCount = 0;
         BigDecimal startAmount = new BigDecimal("10000");
 
-        final BigDecimal B15M = new BigDecimal(20); // 15m
-        final BigDecimal B1H = new BigDecimal(20 * 4); // 1h
-        final BigDecimal B4H = new BigDecimal(20 * 4 * 4); // 4h
-        final BigDecimal B1D = new BigDecimal(20 * 4 * 4 * 6); // 1d
+        final BigDecimal B15M = new BigDecimal(maPeriod); // 15m
+        final BigDecimal B1H = new BigDecimal(maPeriod * 4); // 1h
+        final BigDecimal B4H = new BigDecimal(maPeriod * 4 * 4); // 4h
+        final BigDecimal B1D = new BigDecimal(maPeriod * 4 * 4 * 6); // 1d
 
         {
             final int round = 4;
@@ -385,10 +405,10 @@ public class Candle15MForm extends KRMainFrame {
             for (int ii = 0, len = datas.size(); ii < len; ii++) {
                 Candle15M row = datas.get(ii);
                 row.reset();
-                row.ma_20_15M = calcMA(ifc, ii, B15M, round);
-                row.ma_20_1H = calcMA(ifc, ii, B1H, round);
-                row.ma_20_4H = calcMA(ifc, ii, B4H, round);
-                row.ma_20_1D = calcMA(ifc, ii, B1D, round);
+                row.ma_15M = super.calcMA(ifc, ii, B15M, round);
+                row.ma_1H = super.calcMA(ifc, ii, B1H, round);
+                row.ma_4H = super.calcMA(ifc, ii, B4H, round);
+                row.ma_1D = super.calcMA(ifc, ii, B1D, round);
                 row.close_open(CO_DIFF);
             }
 
@@ -397,22 +417,22 @@ public class Candle15MForm extends KRMainFrame {
             }
             for (int ii = 0, len = datas.size(); ii < len; ii++) {
                 Candle15M row = datas.get(ii);
-                if (row.ma_20_15M == null || row.ma_20_1H == null || row.ma_20_4H == null || row.ma_20_1D == null) {
+                if (row.ma_15M == null || row.ma_1H == null || row.ma_4H == null || row.ma_1D == null) {
                     continue;
                 }
                 Candle15M rowP1 = datas.get(ii - 1);
-                if (rowP1.ma_20_15M == null || rowP1.ma_20_1H == null || rowP1.ma_20_4H == null || rowP1.ma_20_1D == null) {
+                if (rowP1.ma_15M == null || rowP1.ma_1H == null || rowP1.ma_4H == null || rowP1.ma_1D == null) {
                     continue;
                 }
-                row.dma_20_15M = row.ma_20_15M.subtract(rowP1.ma_20_15M);
-                row.dma_20_1H = row.ma_20_1H.subtract(rowP1.ma_20_1H);
-                row.dma_20_4H = row.ma_20_4H.subtract(rowP1.ma_20_4H);
-                row.dma_20_1D = row.ma_20_1D.subtract(rowP1.ma_20_1D);
+                row.dma_15M = row.ma_15M.subtract(rowP1.ma_15M);
+                row.dma_1H = row.ma_1H.subtract(rowP1.ma_1H);
+                row.dma_4H = row.ma_4H.subtract(rowP1.ma_4H);
+                row.dma_1D = row.ma_1D.subtract(rowP1.ma_1D);
 
                 // bb
-                BigDecimal bbBase = calcBoll(ifc, ii, 20, 2, 4);
-                row.bb_20_high2 = row.ma_20_15M.add(OtherUtil.me().TWO.multiply(bbBase));
-                row.bb_20_low2 = row.ma_20_15M.subtract(OtherUtil.me().TWO.multiply(bbBase));
+                BigDecimal bbBase = super.calcBoll(ifc, ii, maPeriod, 2, 4);
+                row.bb_high2 = row.ma_15M.add(OtherUtil.me().TWO.multiply(bbBase));
+                row.bb_low2 = row.ma_15M.subtract(OtherUtil.me().TWO.multiply(bbBase));
 
                 row.doCheckMA(B15M_E, B1H_E, B4H_E, B1D_E);
 
@@ -478,9 +498,9 @@ public class Candle15MForm extends KRMainFrame {
             return false;
         }
         final Candle15M p = datas.get(ii);
-        if (p.ma_20_15M.compareTo(p.ma_20_1H) > 0) {
+        if (p.ma_15M.compareTo(p.ma_1H) > 0) {
             final Candle15M p1 = datas.get(ii - 1);
-            if (p1.ma_20_1H.compareTo(p1.ma_20_15M) > 0) {
+            if (p1.ma_1H.compareTo(p1.ma_15M) > 0) {
                 // logger.debug("gold cross : {}", p1.getOpenTimeDt());
                 return true;
             }

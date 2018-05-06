@@ -18,19 +18,19 @@ public class Start15M {
         EventQueue.invokeLater(new Runnable() {
             @Override
             public void run() {
-                try {
-                    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-                } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
-                    ex.printStackTrace();
-                }
-                JFrame frame = new JFrame("@title@");
-                KRFontManager.me().init(frame);
-                createAndShowGUI(frame);
+                createAndShowGUI();
             }
         });
     }
 
-    private static void createAndShowGUI(final JFrame frame) {
+    private static void createAndShowGUI() {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
+            ex.printStackTrace();
+        }
+        JFrame frame = new JFrame("@title@");
+        KRFontManager.me().init(frame);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.getContentPane().add(Candle15MForm.me());
         frame.pack();

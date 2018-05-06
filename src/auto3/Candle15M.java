@@ -9,27 +9,27 @@ public class Candle15M extends CandleBase {
     }
 
     /**15m*/
-    public BigDecimal ma_20_15M;
+    public BigDecimal ma_15M;
     /**1h*/
-    public BigDecimal ma_20_1H;
+    public BigDecimal ma_1H;
     /**4h*/
-    public BigDecimal ma_20_4H;
+    public BigDecimal ma_4H;
     /**1d*/
-    public BigDecimal ma_20_1D;
+    public BigDecimal ma_1D;
 
     /**15m*/
-    public BigDecimal dma_20_15M;
+    public BigDecimal dma_15M;
     /**1h*/
-    public BigDecimal dma_20_1H;
+    public BigDecimal dma_1H;
     /**4h*/
-    public BigDecimal dma_20_4H;
+    public BigDecimal dma_4H;
     /**1d*/
-    public BigDecimal dma_20_1D;
+    public BigDecimal dma_1D;
 
-    /** bb 20日 +2 */
-    public BigDecimal bb_20_high2;
-    /** bb 20日 -2 */
-    public BigDecimal bb_20_low2;
+    /** bb +2 */
+    public BigDecimal bb_high2;
+    /** bb -2 */
+    public BigDecimal bb_low2;
 
     /** MA判断条件 */
     public boolean checkMA;
@@ -49,24 +49,26 @@ public class Candle15M extends CandleBase {
     }
 
     public void doCheckMA(BigDecimal a, BigDecimal b, BigDecimal c, BigDecimal d) {
-        this.checkMA = this.dma_20_15M.compareTo(a) > 0 //
-                && this.dma_20_1H.compareTo(b) > 0 //
-                && this.dma_20_4H.compareTo(c) > 0 //
-                && this.dma_20_1D.compareTo(d) > 0 //
-        ;
+        this.checkMA = this.dma_15M.compareTo(a) > 0 //
+                && this.dma_1H.compareTo(b) > 0 //
+                && this.dma_4H.compareTo(c) > 0 //
+                && this.dma_1D.compareTo(d) > 0 //
+                ;
     }
 
     public void reset() {
-        ma_20_15M = null;
-        ma_20_1H = null;
-        ma_20_4H = null;
-        ma_20_1D = null;
-        dma_20_15M = null;
-        dma_20_1H = null;
-        dma_20_4H = null;
-        dma_20_1D = null;
-        closeOpenDiff = null;
+        ma_15M = null;
+        ma_1H = null;
+        ma_4H = null;
+        ma_1D = null;
+        dma_15M = null;
+        dma_1H = null;
+        dma_4H = null;
+        dma_1D = null;
+        bb_high2 = null;
+        bb_low2 = null;
         checkMA = false;
+        closeOpenDiff = null;
         isUp = false;
         buy9 = false;
     }

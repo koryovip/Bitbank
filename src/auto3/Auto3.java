@@ -63,10 +63,10 @@ public class Auto3 {
                     row.low = new BigDecimal(record.getStr("low"));
                     row.close = new BigDecimal(record.getStr("close"));
 
-                    row.ma_20_15M = calcMA(ifc, ii, B15M, 4);
-                    row.ma_20_1H = calcMA(ifc, ii, B1H, 4);
-                    row.ma_20_4H = calcMA(ifc, ii, B4H, 4);
-                    row.ma_20_1D = calcMA(ifc, ii, B1D, 4);
+                    row.ma_15M = calcMA(ifc, ii, B15M, 4);
+                    row.ma_1H = calcMA(ifc, ii, B1H, 4);
+                    row.ma_4H = calcMA(ifc, ii, B4H, 4);
+                    row.ma_1D = calcMA(ifc, ii, B1D, 4);
 
                     row.close_open(CO_DIFF);
 
@@ -75,17 +75,17 @@ public class Auto3 {
 
                 for (int ii = 0, len = infos.size(); ii < len; ii++) {
                     Candle15M row = infos.get(ii);
-                    if (row.ma_20_15M == null || row.ma_20_1H == null || row.ma_20_4H == null || row.ma_20_1D == null) {
+                    if (row.ma_15M == null || row.ma_1H == null || row.ma_4H == null || row.ma_1D == null) {
                         continue;
                     }
                     Candle15M rowP1 = infos.get(ii - 1);
-                    if (rowP1.ma_20_15M == null || rowP1.ma_20_1H == null || rowP1.ma_20_4H == null || rowP1.ma_20_1D == null) {
+                    if (rowP1.ma_15M == null || rowP1.ma_1H == null || rowP1.ma_4H == null || rowP1.ma_1D == null) {
                         continue;
                     }
-                    row.dma_20_15M = row.ma_20_15M.subtract(rowP1.ma_20_15M);
-                    row.dma_20_1H = row.ma_20_1H.subtract(rowP1.ma_20_1H);
-                    row.dma_20_4H = row.ma_20_4H.subtract(rowP1.ma_20_4H);
-                    row.dma_20_1D = row.ma_20_1D.subtract(rowP1.ma_20_1D);
+                    row.dma_15M = row.ma_15M.subtract(rowP1.ma_15M);
+                    row.dma_1H = row.ma_1H.subtract(rowP1.ma_1H);
+                    row.dma_4H = row.ma_4H.subtract(rowP1.ma_4H);
+                    row.dma_1D = row.ma_1D.subtract(rowP1.ma_1D);
 
                     row.doCheckMA(B15M_E, B1H_E, B4H_E, B1D_E);
 
@@ -122,8 +122,8 @@ public class Auto3 {
                 , row.openTime //
                 , DateUtil.me().format0(row.getOpenTimeDt()) //
                 , row.open, row.high, row.low, row.close //
-                , row.ma_20_15M, row.ma_20_1H, row.ma_20_4H, row.ma_20_1D //
-                , row.dma_20_15M, row.dma_20_1H, row.dma_20_4H, row.dma_20_1D //
+                , row.ma_15M, row.ma_1H, row.ma_4H, row.ma_1D //
+                , row.dma_15M, row.dma_1H, row.dma_4H, row.dma_1D //
                 , row.checkMA ? "〇" : "×" //
                 , row.closeOpenDiff //
                 , row.closeOpenDiff.compareTo(BigDecimal.ZERO) >= 0 ? "↑" : "↓" //

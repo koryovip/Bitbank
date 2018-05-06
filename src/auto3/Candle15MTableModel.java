@@ -59,17 +59,17 @@ public class Candle15MTableModel extends KRTableModel {
         , row.high //
         , row.low //
         , row.close //
-        , row.ma_20_15M //
-        , row.ma_20_1H //
-        , row.ma_20_4H //
-        , row.ma_20_1D //
-        , row.dma_20_15M //
-        , row.dma_20_1H //
-        , row.dma_20_4H //
-        , row.dma_20_1D //
-        , row.bb_20_low2 //
-        , row.bb_20_high2 //
-        , row.bb_20_high2.subtract(row.bb_20_low2) //
+        , row.ma_15M //
+        , row.ma_1H //
+        , row.ma_4H //
+        , row.ma_1D //
+        , row.dma_15M //
+        , row.dma_1H //
+        , row.dma_4H //
+        , row.dma_1D //
+        , row.bb_low2 //
+        , row.bb_high2 //
+        , row.bb_high2.subtract(row.bb_low2) //
         , row.checkMA ? "〇" : "×" //
         , row.closeOpenDiff //
         , row.isUp ? "↑" : "↓" //
@@ -81,10 +81,14 @@ public class Candle15MTableModel extends KRTableModel {
 
     private final int COL_INX_OPT = 21;
 
+    final public long getOpenTime(int row) {
+        return (long) super.getValueAt(row, COL_INX_OPT);
+    }
+
     public void updRow(Candle15M row) {
         int rows = super.getRowCount();
         for (int ii = rows - 1; ii >= 0; ii--) {
-            long openTime = (long) super.getValueAt(ii, COL_INX_OPT);
+            long openTime = getOpenTime(ii); //(long) super.getValueAt(ii, COL_INX_OPT);
             if (row.openTime == openTime) {
                 // System.out.println("Find Data at " + ii);
                 updateValue(row, ii);
@@ -99,17 +103,17 @@ public class Candle15MTableModel extends KRTableModel {
         super.setValueAt(row.high, ii, colIndex++);
         super.setValueAt(row.low, ii, colIndex++);
         super.setValueAt(row.close, ii, colIndex++);
-        super.setValueAt(row.ma_20_15M, ii, colIndex++);
-        super.setValueAt(row.ma_20_1H, ii, colIndex++);
-        super.setValueAt(row.ma_20_4H, ii, colIndex++);
-        super.setValueAt(row.ma_20_1D, ii, colIndex++);
-        super.setValueAt(row.dma_20_15M, ii, colIndex++);
-        super.setValueAt(row.dma_20_1H, ii, colIndex++);
-        super.setValueAt(row.dma_20_4H, ii, colIndex++);
-        super.setValueAt(row.dma_20_1D, ii, colIndex++);
-        super.setValueAt(row.bb_20_low2, ii, colIndex++);
-        super.setValueAt(row.bb_20_high2, ii, colIndex++);
-        super.setValueAt(row.bb_20_high2.subtract(row.bb_20_low2), ii, colIndex++);
+        super.setValueAt(row.ma_15M, ii, colIndex++);
+        super.setValueAt(row.ma_1H, ii, colIndex++);
+        super.setValueAt(row.ma_4H, ii, colIndex++);
+        super.setValueAt(row.ma_1D, ii, colIndex++);
+        super.setValueAt(row.dma_15M, ii, colIndex++);
+        super.setValueAt(row.dma_1H, ii, colIndex++);
+        super.setValueAt(row.dma_4H, ii, colIndex++);
+        super.setValueAt(row.dma_1D, ii, colIndex++);
+        super.setValueAt(row.bb_low2, ii, colIndex++);
+        super.setValueAt(row.bb_high2, ii, colIndex++);
+        super.setValueAt(row.bb_high2.subtract(row.bb_low2), ii, colIndex++);
         super.setValueAt(row.checkMA ? "〇" : "×", ii, colIndex++);
         super.setValueAt(row.closeOpenDiff, ii, colIndex++);
         super.setValueAt(row.isUp ? "↑" : "↓", ii, colIndex++);
