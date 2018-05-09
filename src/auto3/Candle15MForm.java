@@ -89,7 +89,12 @@ public class Candle15MForm extends KRMainFrame {
                     boolean init = false;
 
                     @Override
-                    public void doUpdate(final long timestamp, final Candlestick candle) {
+                    public int kirikaeSeconds() {
+                        return 50;
+                    }
+
+                    @Override
+                    public void doUpdate(final long timestamp, final Candlestick candle, final boolean isNew, final boolean kirikae) {
                         // System.out.println(candle);
                         final String nowStr = DateUtil.me().format1(timestamp);
                         updateWIndowTitlen(nowStr);
@@ -163,6 +168,10 @@ public class Candle15MForm extends KRMainFrame {
                             if (hold.compareTo(BigDecimal.ZERO) <= 0) {
                                 return;
                             }
+                            if (!kirikae) {
+                                return;
+                            }
+                            /**
                             Calendar cal1 = Calendar.getInstance();
                             cal1.setTime(new Date(timestamp));
                             int min = cal1.get(Calendar.MINUTE);
@@ -172,7 +181,7 @@ public class Candle15MForm extends KRMainFrame {
                             }
                             if (sec < 50) {
                                 return;
-                            }
+                            }*/
                             // send sell order
                             // balance = hold.multiply(candle.close());
                             final BigDecimal price = candle.close();
