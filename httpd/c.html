@@ -374,5 +374,32 @@ getData(MAX_DAYS).then(data => {
 	var line2 = document.getElementById('line2');
 	m_move(document.getElementById("layer"), line1, line2);
 });
+///////////////////////////////////////////////////////////
+var module1 = (function (mod) {
+    // local var
+    _count = 0;
+    mod.func1 = function() {
+    	_count++;
+    };
+    mod.func2 = function() {
+    	console.log(_count);
+    };
+    return mod;
+})(window.module1 || {});
+console.log('module1._count=' + module1._count); // undefined
+module1.func2(); // 0
+module1.func1();
+module1.func1();
+module1.func2(); // 2
+// add function
+var module1 = (function (mod) {
+    mod.func3 = function() {
+        _count--;
+    };
+    return mod;
+})(window.module1 || {});
+module1.func3();
+module1.func2(); // 1
+///////////////////////////////////////////////////////////
 </script>
 </body>
