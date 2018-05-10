@@ -37,13 +37,13 @@ public abstract class TransactionController {
             if (order == null || order.orderId == 0) {
                 throw new Exception("order is null");
             }
-            logger.debug(order);
+            // logger.debug(order);
             transaction.onTransactionOrder(order);
             int retry = 0;
             boolean cancelOrder = false;
             do {
                 order = BitbankClient.me().bbR.getOrder(Config.me().getPair(), order.orderId);
-                logger.debug(order);
+                // logger.debug(order);
                 if (transaction.onTransacting(order, retry++)) {
                     cancelOrder = true;
                     break;
