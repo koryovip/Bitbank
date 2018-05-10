@@ -30,7 +30,7 @@ public abstract class AutoBuyLimit extends TransactionController {
 
     public abstract void onSuccessed(Order order);
 
-    public abstract void onGiveUped(Order order);
+    public abstract boolean onGiveUped(Order order);
 
     public void execute() {
         super.execute(new KRTransaction<Order>() {
@@ -62,8 +62,8 @@ public abstract class AutoBuyLimit extends TransactionController {
             }
 
             @Override
-            public void onGiveUp(Order order) {
-                onGiveUped(order);
+            public boolean onGiveUp(Order order) {
+                return onGiveUped(order);
             }
         });
     }

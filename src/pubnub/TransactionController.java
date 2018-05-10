@@ -50,7 +50,11 @@ public abstract class TransactionController {
                 }
             } while (!order.status.equals("FULLY_FILLED"));
             if (cancelOrder) {
-                transaction.onGiveUp(order);
+                boolean doCancel = transaction.onGiveUp(order);
+                if (doCancel) {
+                    Order order2 = BitbankClient.me().bbW.cancelOrder(Config.me().getPair(), order.orderId);
+                    logger.debug("Cancel Order : {}", order2);
+                }
             } else {
                 transaction.onSuccess(order);
             }
@@ -76,7 +80,7 @@ public abstract class TransactionController {
         public boolean onTransacting(final T t, final int times);
 
         /** オーダー諦めた後 */
-        public void onGiveUp(T order);
+        public boolean onGiveUp(T order);
 
         /** オーダー異常終了 */
         public void onFailed(Throwable t);

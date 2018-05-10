@@ -116,7 +116,9 @@ public class Candle15MForm extends KRMainFrame {
                         if (!init) {
                             return;
                         }
-                        if (last.openTime != candle.openTime()) {
+                        // 画面更新処理
+                        if (state == WatchState.Opening) {
+                            // 新規ローソク１本追加
                             Candle15M newRow = new Candle15M(candle.openTime());
                             newRow.open = candle.open();
                             newRow.high = candle.high();
@@ -125,34 +127,6 @@ public class Candle15MForm extends KRMainFrame {
                             datas.add(newRow);
                             calc(false);
                             model.addRow(newRow);
-
-                            if (!autoTrade.isSelected()) {
-                                // logger.debug("自動取引：OFF");
-                                return;
-                            }
-                            Candle15M last1 = OtherUtil.me().lastItem(datas);
-                            if (!last1.buy9) {
-                                logger.debug("[{}] 売買しない", nowStr);
-                                return;
-                            }
-                            if (hold.compareTo(BigDecimal.ZERO) > 0) {
-                                return;
-                            }
-                            // send buy order
-                            //hold = balance.divide(candle.open(), 4, RoundingMode.DOWN);
-                            final BigDecimal buyPrice = candle.close(); // closeは一番正確。このタイミングでの価格で買う。殆どの場合、openと変わらないはず。
-                            new AutoBuyLimit(Config.me().getPair(), buyPrice, AMOUNT) {
-                                @Override
-                                public void onSuccessed(Order order) {
-                                    hold = order.executedAmount;
-                                }
-
-                                @Override
-                                public void onGiveUped(Order order) {
-                                    hold = order.executedAmount;
-                                }
-                            }.execute();
-                            logger.debug("[{}]:{}で買い。hold:{}", nowStr, buyPrice, hold);
                         } else {
                             last.open = candle.open();
                             last.high = candle.high();
@@ -160,50 +134,149 @@ public class Candle15MForm extends KRMainFrame {
                             last.close = candle.close();
                             calc(false);
                             model.updRow(last);
-
-                            if (!autoTrade.isSelected()) {
-                                // logger.debug("自動取引：OFF");
+                        }
+                        // 自動売買処理
+                        if (!autoTrade.isSelected()) {
+                            // logger.debug("自動取引：OFF");
+                            return;
+                        }
+                        Candle15M last1 = OtherUtil.me().lastItem(datas);
+                        if (state == WatchState.Opening) {
+                            // 買い
+                            if (hold.compareTo(BigDecimal.ZERO) > 0) {
                                 return;
                             }
-                            /*Candle15M last1 = OtherUtil.me().lastItem(datas);
                             if (!last1.buy9) {
-                                System.out.println(String.format("[%s] 売買しない", DateUtil.me().format0(timestamp)));
+                                logger.debug("[{}] 売買条件成立しない", nowStr);
                                 return;
-                            }*/
-                            // 売り条件は、持っていたらだけです。売買条件は途中で変わるため。
+                            }
+                            {
+                                final BigDecimal buyPrice = candle.close(); // closeは一番正確。このタイミングでの価格で買う。殆どの場合、openと変わらないはず。
+                                new AutoBuyLimit(Config.me().getPair(), buyPrice, AMOUNT) {
+                                    @Override
+                                    public void onSuccessed(Order order) {
+                                        hold = order.executedAmount;
+                                    }
+
+                                    @Override
+                                    public boolean onGiveUped(Order order) {
+                                        hold = order.executedAmount;
+                                        return true;
+                                    }
+                                }.execute();
+                                logger.debug("[{}]:{}で買い。hold:{}", nowStr, buyPrice, hold);
+                            }
+                        }
+                        if (state == WatchState.Closeing) {
+                            // 売り
                             if (hold.compareTo(BigDecimal.ZERO) <= 0) {
                                 return;
                             }
-                            if (state != WatchState.Closeing) {
-                                return;
-                            }
-                            /**
-                            Calendar cal1 = Calendar.getInstance();
-                            cal1.setTime(new Date(timestamp));
-                            int min = cal1.get(Calendar.MINUTE);
-                            int sec = cal1.get(Calendar.SECOND);
-                            if (!(min == 14 || min == 29 || min == 44 || min == 59)) {
-                                return;
-                            }
-                            if (sec < 50) {
-                                return;
-                            }*/
-                            // send sell order
-                            // balance = hold.multiply(candle.close());
-                            final BigDecimal price = candle.close();
-                            new AutoSellLimit(Config.me().getPair(), price, hold) {
-                                @Override
-                                public void onSuccessed(Order order) {
-                                    hold = BigDecimal.ZERO;
-                                }
+                            {
+                                final BigDecimal price = candle.close();
+                                new AutoSellLimit(Config.me().getPair(), price, hold) {
+                                    @Override
+                                    public void onSuccessed(Order order) {
+                                        hold = BigDecimal.ZERO;
+                                    }
 
-                                @Override
-                                public void onGiveUped(Order order) {
-                                    hold = BigDecimal.ZERO; // TODO 売り残った数量をセット
-                                }
-                            }.execute();
-                            logger.debug("[{}]:{}で売り。hold:{}", nowStr, price, hold);
+                                    @Override
+                                    public boolean onGiveUped(Order order) {
+                                        hold = order.remainingAmount;
+                                        return true;
+                                    }
+                                }.execute();
+                                logger.debug("[{}]:{}で売り。hold:{}", nowStr, price, hold);
+                            }
                         }
+                        //                        if (last.openTime != candle.openTime()) {
+                        //                            Candle15M newRow = new Candle15M(candle.openTime());
+                        //                            newRow.open = candle.open();
+                        //                            newRow.high = candle.high();
+                        //                            newRow.low = candle.low();
+                        //                            newRow.close = candle.close();
+                        //                            datas.add(newRow);
+                        //                            calc(false);
+                        //                            model.addRow(newRow);
+                        //
+                        //                            if (!autoTrade.isSelected()) {
+                        //                                // logger.debug("自動取引：OFF");
+                        //                                return;
+                        //                            }
+                        //                            Candle15M last1 = OtherUtil.me().lastItem(datas);
+                        //                            if (!last1.buy9) {
+                        //                                logger.debug("[{}] 売買しない", nowStr);
+                        //                                return;
+                        //                            }
+                        //                            if (hold.compareTo(BigDecimal.ZERO) > 0) {
+                        //                                return;
+                        //                            }
+                        //                            // send buy order
+                        //                            //hold = balance.divide(candle.open(), 4, RoundingMode.DOWN);
+                        //                            final BigDecimal buyPrice = candle.close(); // closeは一番正確。このタイミングでの価格で買う。殆どの場合、openと変わらないはず。
+                        //                            new AutoBuyLimit(Config.me().getPair(), buyPrice, AMOUNT) {
+                        //                                @Override
+                        //                                public void onSuccessed(Order order) {
+                        //                                    hold = order.executedAmount;
+                        //                                }
+                        //
+                        //                                @Override
+                        //                                public void onGiveUped(Order order) {
+                        //                                    hold = order.executedAmount;
+                        //                                }
+                        //                            }.execute();
+                        //                            logger.debug("[{}]:{}で買い。hold:{}", nowStr, buyPrice, hold);
+                        //                        } else {
+                        //                            last.open = candle.open();
+                        //                            last.high = candle.high();
+                        //                            last.low = candle.low();
+                        //                            last.close = candle.close();
+                        //                            calc(false);
+                        //                            model.updRow(last);
+                        //
+                        //                            if (!autoTrade.isSelected()) {
+                        //                                // logger.debug("自動取引：OFF");
+                        //                                return;
+                        //                            }
+                        //                            /*Candle15M last1 = OtherUtil.me().lastItem(datas);
+                        //                            if (!last1.buy9) {
+                        //                                System.out.println(String.format("[%s] 売買しない", DateUtil.me().format0(timestamp)));
+                        //                                return;
+                        //                            }*/
+                        //                            // 売り条件は、持っていたらだけです。売買条件は途中で変わるため。
+                        //                            if (hold.compareTo(BigDecimal.ZERO) <= 0) {
+                        //                                return;
+                        //                            }
+                        //                            if (state != WatchState.Closeing) {
+                        //                                return;
+                        //                            }
+                        //                            /**
+                        //                            Calendar cal1 = Calendar.getInstance();
+                        //                            cal1.setTime(new Date(timestamp));
+                        //                            int min = cal1.get(Calendar.MINUTE);
+                        //                            int sec = cal1.get(Calendar.SECOND);
+                        //                            if (!(min == 14 || min == 29 || min == 44 || min == 59)) {
+                        //                                return;
+                        //                            }
+                        //                            if (sec < 50) {
+                        //                                return;
+                        //                            }*/
+                        //                            // send sell order
+                        //                            // balance = hold.multiply(candle.close());
+                        //                            final BigDecimal price = candle.close();
+                        //                            new AutoSellLimit(Config.me().getPair(), price, hold) {
+                        //                                @Override
+                        //                                public void onSuccessed(Order order) {
+                        //                                    hold = BigDecimal.ZERO;
+                        //                                }
+                        //
+                        //                                @Override
+                        //                                public void onGiveUped(Order order) {
+                        //                                    hold = BigDecimal.ZERO; // TODO 売り残った数量をセット
+                        //                                }
+                        //                            }.execute();
+                        //                            logger.debug("[{}]:{}で売り。hold:{}", nowStr, price, hold);
+                        //                        }
                         // calc();
                     }
                 }).monitor();
@@ -452,7 +525,7 @@ public class Candle15MForm extends KRMainFrame {
                 row.doCheckMA(B15M_E, B1H_E, B4H_E, B1D_E);
 
                 {
-                    row.buy9 = (row.checkMA) && (rowP1.isUp) && (checkBefore(datas, ii, MAXContinuingBuy));
+                    row.buy9 = (rowP1.isUp) && (row.checkMA) && (checkBefore(datas, ii, MAXContinuingBuy));
                     /*if (row.buy9 && rowP1.bb_20_high2 != null) {
                     if (rowP1.close.subtract(rowP1.bb_20_high2).compareTo(new BigDecimal("0.7")) >= 0) {
                         row.buy9 = false;

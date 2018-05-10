@@ -69,8 +69,9 @@ public class TSSeller extends TransactionController implements Runnable {
             }
 
             @Override
-            public void onGiveUp(Order order) {
+            public boolean onGiveUp(Order order) {
                 // TODO どうする？
+                return false;
             }
         });
     }
