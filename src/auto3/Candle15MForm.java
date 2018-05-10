@@ -31,6 +31,7 @@ import com.jfinal.plugin.activerecord.Record;
 import com.jfinal.plugin.druid.DruidPlugin;
 import com.jfinal.template.source.ClassPathSourceFactory;
 
+import auto3.CandleWatcherBase.WatchState;
 import cc.Config;
 import cc.bitbank.entity.Order;
 import cc.bitbank.entity.enums.CandleType;
@@ -89,12 +90,17 @@ public class Candle15MForm extends KRMainFrame {
                     boolean init = false;
 
                     @Override
-                    public int kirikaeSeconds() {
+                    public int openRangeSec() {
+                        return 10;
+                    }
+
+                    @Override
+                    public int closeRangeSec() {
                         return 50;
                     }
 
                     @Override
-                    public void doUpdate(final long timestamp, final Candlestick candle, final boolean isNew, final boolean kirikae) {
+                    public void doUpdate(final long timestamp, final Candlestick candle, final WatchState state, final Candlestick lastCandle) {
                         // System.out.println(candle);
                         final String nowStr = DateUtil.me().format1(timestamp);
                         updateWIndowTitlen(nowStr);
@@ -168,7 +174,7 @@ public class Candle15MForm extends KRMainFrame {
                             if (hold.compareTo(BigDecimal.ZERO) <= 0) {
                                 return;
                             }
-                            if (!kirikae) {
+                            if (state != WatchState.Closeing) {
                                 return;
                             }
                             /**

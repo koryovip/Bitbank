@@ -17,7 +17,13 @@ public class Candle15MWatcher extends CandleWatcherBase {
     }
 
     @Override
-    protected boolean ckeckKirikae(int min) {
+    protected boolean isInOpenRange(int min) {
+        return min == 0 || min == 15 || min == 30 || min == 45;
+    }
+
+    @Override
+    protected boolean isInCloseRange(int min) {
         return min == 14 || min == 29 || min == 44 || min == 59;
     }
+
 }
