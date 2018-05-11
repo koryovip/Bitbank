@@ -82,7 +82,7 @@ public class Candle15MForm extends KRMainFrame {
                     getDB(cal1.getTime());
                 }
                 final int startYear = 2018;
-                final int startMonth = 3;
+                final int startMonth = 4;
                 final float period = 15.0f;
                 initData(startYear, startMonth, period);
                 calc(true);
